@@ -1,0 +1,316 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PLANNING_TEAM
+  PLACEMENT_TEAM
+  DRIVER_MANAGEMENT
+  MAINTENANCE_TEAM
+  KAM
+}
+
+enum LaneType {
+  FW
+  RET
+}
+
+enum FinalStatus {
+  PLACED
+  PENDING
+  NOT_PLACED
+}
+
+enum DriverIssue {
+  NO_ISSUE
+  SINGLE_DRIVER
+  DENYING_FOR_LOAD
+  DRIVER_NOT_AVAILABLE
+}
+
+enum MaintenanceIssue {
+  NO_ISSUE
+  KAMANI_WORK
+  BATTERY_WORK
+  TYRE_AND_ALIGNMENT
+  ELECTRICAL_AND_MECHANICAL
+  MILEAGE_ISSUE
+  VARIOUS_ISSUES
+}
+
+enum ELockStatus {
+  HEALTHY
+  UNHEALTHY
+  LOCK_DAMAGE
+}
+
+enum IDFYStatus {
+  REQUIRED_AVAILABLE
+  REQUIRED_NOT_AVAILABLE
+  NOT_REQUIRED
+}
+
+enum EquipmentStatus {
+  AVAILABLE
+  NOT_AVAILABLE
+}
+
+enum IssueCategory {
+  DRIVER
+  MAINTENANCE
+  EQUIPMENT
+}
+
+enum IssueStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+}
+
+enum NotificationType {
+  CUTOFF_ALERT
+  PENDING_ALERT
+  ISSUE_ALERT
+  GENERAL
+}
+
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  tokenVersion Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  clients              Client[]
+  placements           Placement[]
+  d1Remarks            D1PlanningRemark[]
+  sameDayRemarks       SameDayPlanningRemark[]
+  placementTeamRemarks PlacementTeamRemark[]
+  notifications        Notification[]
+  raisedIssues         IssueAlert[]            @relation("RaisedIssues")
+  resolvedIssues       IssueAlert[]            @relation("ResolvedIssues")
+  auditLogs            AuditLog[]
+  issueComments        IssueComment[]
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  kamId     String?
+  kam       User?    @relation(fields: [kamId], references: [id])
+  createdAt DateTime @default(now())
+
+  placements   Placement[]
+  masterRoutes MasterRoute[]
+}
+
+model Route {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  origin      String
+  destination String
+  createdAt   DateTime @default(now())
+
+  placements   Placement[]
+  masterRoutes MasterRoute[]
+}
+
+model Vendor {
+  id           String        @id @default(cuid())
+  name         String        @unique
+  createdAt    DateTime      @default(now())
+  masterRoutes MasterRoute[]
+}
+
+model MasterRoute {
+  id            String   @id @default(cuid())
+  clientId      String
+  routeId       String
+  cohort        String
+  placementTime String
+  compliance    String
+  vendorId      String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  client  Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  route   Route   @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  vendor  Vendor? @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([routeId])
+  @@index([vendorId])
+}
+
+model Vehicle {
+  id              String    @id @default(cuid())
+  vehicleNumber   String    @unique
+  type            String?
+  isActive        Boolean   @default(true)
+  inactiveReason  String?
+  inactiveComment String?
+  createdAt       DateTime  @default(now())
+
+  placements Placement[]
+}
+
+model Placement {
+  id            String      @id @default(cuid())
+  date          DateTime    @db.Date
+  clientId      String
+  routeId       String
+  cohort        String
+  laneType      LaneType
+  vehicleId     String?
+  placementTime DateTime
+  cutoffTime    DateTime
+  finalStatus   FinalStatus @default(PENDING)
+  alertSent     Boolean     @default(false)
+  compliance    String?
+  driverNumber1 String?
+  driverNumber2 String?
+  createdById   String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  client    Client   @relation(fields: [clientId], references: [id])
+  route     Route    @relation(fields: [routeId], references: [id])
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+  createdBy User     @relation(fields: [createdById], references: [id])
+
+  d1Remark            D1PlanningRemark?
+  sameDayRemark       SameDayPlanningRemark?
+  placementTeamRemark PlacementTeamRemark?
+  notifications       Notification[]
+  issueAlerts         IssueAlert[]
+  auditLogs           AuditLog[]
+
+  @@unique([vehicleId, date])
+  @@index([date])
+  @@index([clientId])
+  @@index([vehicleId])
+  @@index([finalStatus])
+  @@index([date, clientId])
+  @@index([createdById])
+}
+
+model D1PlanningRemark {
+  id               String            @id @default(cuid())
+  placementId      String            @unique
+  driverIssue      DriverIssue?
+  maintenanceIssue MaintenanceIssue?
+  filledById       String?
+  filledAt         DateTime?
+
+  placement Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  filledBy  User?     @relation(fields: [filledById], references: [id])
+}
+
+model SameDayPlanningRemark {
+  id               String            @id @default(cuid())
+  placementId      String            @unique
+  driverIssue      DriverIssue?
+  maintenanceIssue MaintenanceIssue?
+  filledById       String?
+  filledAt         DateTime?
+
+  placement Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  filledBy  User?     @relation(fields: [filledById], references: [id])
+}
+
+model PlacementTeamRemark {
+  id          String           @id @default(cuid())
+  placementId String           @unique
+  elockStatus ELockStatus?
+  idfyDrivers IDFYStatus?
+  cargoNet    EquipmentStatus?
+  tirpal      EquipmentStatus?
+  stepney     EquipmentStatus?
+  filledById  String?
+  filledAt    DateTime?
+
+  placement Placement @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  filledBy  User?     @relation(fields: [filledById], references: [id])
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  placementId String?
+  type        NotificationType @default(GENERAL)
+  message     String
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  placement Placement? @relation(fields: [placementId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, placementId, type])
+  @@index([userId])
+  @@index([userId, read])
+}
+
+model IssueAlert {
+  id             String        @id @default(cuid())
+  placementId    String
+  issueCategory  IssueCategory
+  issueValue     String
+  status         IssueStatus   @default(OPEN)
+  raisedById     String
+  raisedAt       DateTime      @default(now())
+  resolvedById   String?
+  resolvedAt     DateTime?
+  resolutionNote String?
+  eta            DateTime?
+
+  placement  Placement      @relation(fields: [placementId], references: [id], onDelete: Cascade)
+  raisedBy   User           @relation("RaisedIssues", fields: [raisedById], references: [id])
+  resolvedBy User?          @relation("ResolvedIssues", fields: [resolvedById], references: [id])
+  comments   IssueComment[]
+
+  @@index([placementId])
+  @@index([status])
+  @@index([raisedById])
+}
+
+model IssueComment {
+  id        String     @id @default(cuid())
+  issueId   String
+  userId    String
+  comment   String
+  createdAt DateTime   @default(now())
+
+  issue IssueAlert @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String
+  entity      String
+  entityId    String
+  description String
+  oldValue    String?
+  newValue    String?
+  placementId String?
+  createdAt   DateTime @default(now())
+
+  user      User       @relation(fields: [userId], references: [id])
+  placement Placement? @relation(fields: [placementId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([placementId])
+  @@index([createdAt])
+}

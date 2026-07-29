@@ -1,0 +1,397 @@
+
+> placement-app@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 4.3s
+ ○ Compiling /api/notifications ...
+ ✓ Compiled /api/notifications in 4s (298 modules)
+ GET /api/notifications 200 in 6629ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1460ms (180 modules)
+ ✓ Compiled /api/auth/[...nextauth] in 336ms (300 modules)
+ GET /api/auth/signin?callbackUrl=%2Fadmin%2Fhistory 302 in 1737ms
+ ○ Compiling /login ...
+ ✓ Compiled /login in 8.6s (855 modules)
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fadmin%2Fhistory 200 in 9252ms
+ ✓ Compiled in 719ms (284 modules)
+ GET /api/auth/signin?callbackUrl=%2Fissues 302 in 49ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fissues 200 in 41ms
+ GET /api/auth/signin?callbackUrl=%2Fdashboard 302 in 24ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fdashboard 200 in 44ms
+ GET /api/notifications 200 in 268ms
+ GET /api/notifications 200 in 225ms
+ GET /api/notifications 200 in 222ms
+ GET /api/notifications 200 in 199ms
+ GET /api/notifications 200 in 208ms
+ GET /api/notifications 200 in 942ms
+ GET /api/notifications 200 in 210ms
+ GET /api/notifications 200 in 210ms
+ GET /api/notifications 200 in 209ms
+ GET /api/notifications 200 in 183ms
+ GET /api/notifications 200 in 213ms
+ GET /api/notifications 200 in 992ms
+ GET /api/notifications 200 in 201ms
+ GET /api/notifications 200 in 240ms
+ GET /api/notifications 200 in 240ms
+ GET /api/auth/session 200 in 54ms
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 1766ms (904 modules)
+ GET /dashboard 200 in 3409ms
+ ✓ Compiled /api/placements in 500ms (633 modules)
+ ✓ Compiled (637 modules)
+ GET /favicon.ico 200 in 1201ms
+ GET /api/auth/session 200 in 1129ms
+ GET /api/auth/session 200 in 17ms
+ GET /api/notifications 200 in 1322ms
+ GET /api/placements?date=2026-07-29 200 in 1307ms
+ GET /api/notifications 200 in 202ms
+ GET /dashboard 200 in 541ms
+ GET /favicon.ico 200 in 25ms
+ GET /api/auth/session 200 in 70ms
+ GET /api/auth/session 200 in 21ms
+ GET /api/placements?date=2026-07-29 200 in 142ms
+ GET /api/notifications 200 in 191ms
+ GET /api/notifications 200 in 92ms
+ GET /api/placements?date=2026-07-28 200 in 1403ms
+ GET /api/placements?date=2026-07-28 200 in 647ms
+ GET /api/notifications 200 in 200ms
+ GET /api/placements?date=2026-07-28 200 in 626ms
+ GET /api/placements?date=2026-07-28 200 in 637ms
+ GET /api/notifications 200 in 196ms
+ GET /api/placements?date=2026-07-28 200 in 548ms
+ GET /api/placements?date=2026-07-28 200 in 584ms
+ GET /api/notifications 200 in 169ms
+ GET /api/placements?date=2026-07-28 200 in 561ms
+ GET /api/notifications 200 in 178ms
+ GET /api/placements?date=2026-07-28 200 in 612ms
+ GET /api/notifications 200 in 848ms
+ GET /api/auth/session 200 in 51ms
+ GET /api/placements?date=2026-07-28 200 in 1148ms
+ GET /api/placements?date=2026-07-28 200 in 533ms
+ ○ Compiling /admin/analytics ...
+ ✓ Compiled /admin/analytics in 769ms (914 modules)
+ GET /admin/analytics?_rsc=kq7jz 200 in 870ms
+ GET /api/notifications 200 in 186ms
+ GET /api/notifications 200 in 105ms
+ ✓ Compiled /admin/vehicles in 375ms (920 modules)
+ ✓ Compiled /api/admin/vehicles in 249ms (619 modules)
+ GET /api/admin/vehicles?withIssues=true 200 in 1161ms
+ GET /api/admin/vehicles?withIssues=true 200 in 432ms
+ ✓ Compiled /admin/issues in 330ms (924 modules)
+ GET /api/notifications 200 in 113ms
+ GET /api/placements?date=2026-07-29 200 in 170ms
+ GET /api/notifications 200 in 129ms
+ GET /api/placements?date=2026-07-28 200 in 1110ms
+ GET /api/placements?date=2026-07-28 200 in 642ms
+ GET /api/auth/session 200 in 54ms
+ ✓ Compiled /issues in 457ms (931 modules)
+ GET /issues?_rsc=1el32 200 in 23ms
+ GET /api/notifications 200 in 126ms
+ ✓ Compiled /api/issues in 231ms (628 modules)
+ GET /api/notifications 200 in 594ms
+ GET /api/issues?status=ALL 200 in 1036ms
+ GET /api/issues?status=ALL 200 in 484ms
+ ✓ Compiled /api/issues/[id]/comments in 224ms (622 modules)
+ GET /api/issues/cms4kweis000pv5m35qr93htq/comments 200 in 984ms
+ GET /api/issues/cms4kweis000pv5m35qr93htq/comments 200 in 124ms
+ ✓ Compiled /admin/issues in 205ms (624 modules)
+ GET /api/notifications 200 in 108ms
+ GET /api/notifications 200 in 91ms
+ ○ Compiling /sameday-pending ...
+ ✓ Compiled /sameday-pending in 603ms (931 modules)
+ GET /sameday-pending?_rsc=7lhyb 200 in 253ms
+ ✓ Compiled /d1-pending in 364ms (934 modules)
+ GET /d1-pending?_rsc=lje8c 200 in 653ms
+ GET /api/notifications 200 in 108ms
+ GET /api/notifications 200 in 91ms
+ GET /api/notifications 200 in 95ms
+ GET /api/notifications 200 in 100ms
+ GET /api/notifications 200 in 91ms
+ GET /api/notifications 200 in 120ms
+ GET /api/notifications 200 in 296ms
+ GET /api/notifications 200 in 132ms
+ GET /api/issues?status=ALL 200 in 1466ms
+ GET /api/issues?status=ALL 200 in 524ms
+ GET /api/notifications 200 in 87ms
+ GET /api/notifications 200 in 87ms
+ GET /api/notifications 200 in 175ms
+ GET /api/notifications 200 in 97ms
+ GET /api/issues?status=ALL 200 in 573ms
+ GET /api/issues?status=ALL 200 in 497ms
+ GET /api/notifications 200 in 113ms
+ GET /api/notifications 200 in 118ms
+ GET /api/notifications 200 in 104ms
+ GET /api/notifications 200 in 120ms
+ GET /api/issues?status=ALL 200 in 462ms
+ GET /api/issues?status=ALL 200 in 463ms
+ GET /dashboard?_rsc=pcfej 200 in 1024ms
+ GET /api/notifications 200 in 260ms
+ ✓ Compiled /api/placements in 351ms (627 modules)
+ GET /api/notifications 200 in 225ms
+ GET /api/placements?date=2026-07-29 200 in 607ms
+ GET /api/placements?date=2026-07-28 200 in 1307ms
+ GET /api/notifications 200 in 115ms
+ GET /api/notifications 200 in 111ms
+ ✓ Compiled /api/auth/[...nextauth] in 196ms (626 modules)
+ GET /api/auth/session 200 in 264ms
+ GET /api/notifications 200 in 228ms
+ GET /api/notifications 200 in 220ms
+ GET /api/notifications 200 in 207ms
+ GET /api/notifications 200 in 196ms
+ GET /api/notifications 200 in 928ms
+ GET /api/notifications 200 in 211ms
+ GET /api/auth/session 200 in 45ms
+ GET /api/notifications 200 in 201ms
+ GET /api/notifications 200 in 106ms
+ ✓ Compiled /sameday-pending in 352ms (623 modules)
+ GET /api/notifications 200 in 123ms
+ GET /api/notifications 200 in 111ms
+ GET /api/notifications 200 in 110ms
+ GET /api/notifications 200 in 181ms
+ GET /api/notifications 200 in 170ms
+ ✓ Compiled /api/placements in 503ms (627 modules)
+ GET /api/placements?date=2026-07-29 200 in 1190ms
+ GET /api/notifications 200 in 1714ms
+ GET /api/placements?date=2026-07-21 200 in 236ms
+ GET /api/placements?date=2026-07-28 200 in 1094ms
+ GET /api/auth/session 200 in 34ms
+ GET /api/placements?date=2026-07-28 200 in 662ms
+ GET /api/notifications 200 in 246ms
+ GET /api/placements?date=2026-07-28 200 in 580ms
+ GET /api/placements?date=2026-07-28 200 in 698ms
+ GET /api/auth/session 200 in 48ms
+ GET /api/notifications 200 in 178ms
+ GET /api/placements?date=2026-07-28 200 in 628ms
+ GET /api/placements?date=2026-07-28 200 in 674ms
+ GET /api/notifications 200 in 173ms
+ GET /api/placements?date=2026-07-28 200 in 580ms
+ GET /api/notifications 200 in 188ms
+ GET /api/placements?date=2026-07-28 200 in 583ms
+ GET /api/notifications 200 in 183ms
+ GET /api/placements?date=2026-07-28 200 in 1748ms
+ GET /api/notifications 200 in 240ms
+ GET /api/placements?date=2026-07-28 200 in 541ms
+ GET /api/placements?date=2026-07-28 200 in 658ms
+ GET /api/notifications 200 in 778ms
+ GET /api/notifications 200 in 172ms
+ GET /api/placements?date=2026-07-28 200 in 1153ms
+ GET /api/notifications 200 in 178ms
+ GET /api/placements?date=2026-07-28 200 in 636ms
+ GET /api/notifications 200 in 184ms
+ GET /api/placements?date=2026-07-28 200 in 663ms
+ GET /api/placements?date=2026-07-28 200 in 638ms
+ GET /api/notifications 200 in 910ms
+ GET /api/notifications 200 in 171ms
+ GET /api/placements?date=2026-07-28 200 in 1091ms
+ GET /api/placements?date=2026-07-28 200 in 627ms
+ GET /api/notifications 200 in 900ms
+ GET /api/notifications 200 in 198ms
+ GET /api/placements?date=2026-07-28 200 in 1550ms
+ GET /api/notifications 200 in 168ms
+ GET /api/placements?date=2026-07-28 200 in 736ms
+ GET /api/notifications 200 in 198ms
+ GET /api/placements?date=2026-07-28 200 in 623ms
+ GET /api/notifications 200 in 198ms
+ GET /api/placements?date=2026-07-28 200 in 1615ms
+ GET /api/notifications 200 in 207ms
+ GET /api/placements?date=2026-07-28 200 in 617ms
+ GET /api/placements?date=2026-07-28 200 in 604ms
+ GET /api/notifications 200 in 813ms
+ GET /api/notifications 200 in 245ms
+ GET /api/placements?date=2026-07-28 200 in 1215ms
+ GET /api/notifications 200 in 217ms
+ GET /api/placements?date=2026-07-28 200 in 725ms
+ GET /api/notifications 200 in 201ms
+ GET /api/placements?date=2026-07-28 200 in 716ms
+ GET /api/placements?date=2026-07-28 200 in 679ms
+ GET /api/notifications 200 in 928ms
+ GET /api/notifications 200 in 243ms
+ GET /api/placements?date=2026-07-28 200 in 1267ms
+ GET /api/placements?date=2026-07-28 200 in 718ms
+ GET /api/notifications 200 in 820ms
+ ✓ Compiled in 9.3s (942 modules)
+ ✓ Compiled in 1646ms (1122 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 3485ms
+ GET /dashboard?_rsc=tu1zy 200 in 1543ms
+ GET /dashboard?_rsc=tu1zy 200 in 1488ms
+ GET /api/placements?date=2026-07-28 200 in 1509ms
+ ✓ Compiled in 1547ms (1122 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 1091ms
+ GET /dashboard?_rsc=tu1zy 200 in 533ms
+ GET /api/notifications 200 in 333ms
+ GET /api/placements?date=2026-07-28 200 in 836ms
+ ✓ Compiled in 214ms (320 modules)
+ ✓ Compiled in 212ms (320 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 302ms
+ GET /dashboard?_rsc=tu1zy 200 in 367ms
+ GET /api/notifications 200 in 183ms
+ GET /api/placements?date=2026-07-28 200 in 1239ms
+ ✓ Compiled in 1399ms (942 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 547ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1647ms
+ GET /api/notifications 200 in 115ms
+ ✓ Compiled in 783ms (945 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 1405ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1374ms
+ ○ Compiling /api/dashboard/alerts ...
+ ✓ Compiled /api/dashboard/alerts in 514ms (626 modules)
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1922ms
+ GET /api/dashboard/alerts 200 in 2584ms
+ GET /api/dashboard/alerts 200 in 1007ms
+ GET /api/notifications 200 in 300ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1416ms
+ GET /api/dashboard/alerts 200 in 1697ms
+ ✓ Compiled in 851ms (932 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 645ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 851ms
+ GET /api/dashboard/alerts 200 in 1108ms
+ ✓ Compiled in 203ms (321 modules)
+ ✓ Compiled in 304ms (321 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 737ms
+ GET /dashboard?_rsc=tu1zy 200 in 1331ms
+ ✓ Compiled in 774ms (946 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 1676ms
+ GET /api/notifications 200 in 180ms
+ ✓ Compiled in 624ms (946 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 1336ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 682ms
+ GET /api/dashboard/alerts 200 in 1008ms
+ ✓ Compiled in 531ms (946 modules)
+ GET /dashboard?_rsc=tu1zy 200 in 1243ms
+ ✓ Compiled / in 430ms (949 modules)
+ GET / 307 in 612ms
+ ✓ Compiled /login in 244ms (632 modules)
+ GET /login 200 in 417ms
+ GET /dashboard?_rsc=tu1zy 200 in 665ms
+ ✓ Compiled /api/auth/[...nextauth] in 287ms (661 modules)
+ ✓ Compiled (663 modules)
+ GET /api/auth/session 200 in 494ms
+ GET /favicon.ico 200 in 642ms
+ GET /api/auth/session 200 in 13ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1281ms
+ GET /api/dashboard/alerts 200 in 1854ms
+ GET /api/auth/signin?callbackUrl=%2Fdashboard 302 in 20ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fdashboard 200 in 113ms
+ GET /favicon.ico 200 in 16ms
+ GET /favicon.ico 200 in 28ms
+ GET /api/auth/session 200 in 23ms
+ GET /api/auth/session 200 in 14ms
+ GET /api/notifications 200 in 999ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 738ms
+ GET /api/dashboard/alerts 200 in 1985ms
+ ✓ Compiled in 1347ms (979 modules)
+ ✓ Compiled in 0ms (658 modules)
+ ✓ Compiled in 1ms (658 modules)
+ ✓ Compiled in 0ms (658 modules)
+ GET /favicon.ico 200 in 21ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 2847ms
+ GET /dashboard?_rsc=tu1zy 200 in 2427ms
+ GET /api/dashboard/alerts 200 in 1624ms
+ ⨯ ./components/PlacementTable.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+     ,-[[36;1;4mC:\Users\Dell\Projects\Fleet\placement-app\components\PlacementTable.tsx[0m:227:1]
+ [2m227[0m |   const hasActiveFilters = !!(statusFilter || vehicleSearch || routeFilter);
+ [2m228[0m | 
+ [2m229[0m |   return (
+ [2m230[0m |     <div>
+     : [31;1m     ^^^[0m
+ [2m231[0m |       {/* View mode + filters */}
+ [2m232[0m |       <div className="mb-5 flex flex-wrap items-center gap-3">
+ [2m233[0m |         {/* Mode switcher */}
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/PlacementTable.tsx
+./app/dashboard/page.tsx
+ GET /favicon.ico 500 in 836ms
+ ○ Compiling /_error ...
+ ⨯ ./components/PlacementTable.tsx
+Error: 
+  [31mx[0m Unexpected token `div`. Expected jsx identifier
+     ,-[[36;1;4mC:\Users\Dell\Projects\Fleet\placement-app\components\PlacementTable.tsx[0m:227:1]
+ [2m227[0m |   const hasActiveFilters = !!(statusFilter || vehicleSearch || routeFilter);
+ [2m228[0m | 
+ [2m229[0m |   return (
+ [2m230[0m |     <div>
+     : [31;1m     ^^^[0m
+ [2m231[0m |       {/* View mode + filters */}
+ [2m232[0m |       <div className="mb-5 flex flex-wrap items-center gap-3">
+ [2m233[0m |         {/* Mode switcher */}
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./components/PlacementTable.tsx
+./app/dashboard/page.tsx
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fdashboard 500 in 78ms
+ GET /dashboard 500 in 170ms
+ GET /favicon.ico 500 in 236ms
+ ✓ Compiled /_not-found in 1575ms (1194 modules)
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fdashboard 200 in 384ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET /dashboard 200 in 328ms
+ GET /_next/static/webpack/374207eac6359bbf.webpack.hot-update.json 404 in 2078ms
+ GET /dashboard 200 in 1407ms
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename 'C:\Users\Dell\Projects\Fleet\placement-app\.next\cache\webpack\client-development-fallback\0.pack.gz_' -> 'C:\Users\Dell\Projects\Fleet\placement-app\.next\cache\webpack\client-development-fallback\0.pack.gz'
+ GET /favicon.ico 200 in 31ms
+ GET /favicon.ico 200 in 27ms
+ GET /api/auth/session 200 in 36ms
+ GET /api/auth/session 200 in 15ms
+ GET /favicon.ico 200 in 15ms
+ GET /api/auth/session 200 in 50ms
+ GET /api/auth/session 200 in 27ms
+ GET /api/notifications 200 in 237ms
+ GET /api/notifications 200 in 96ms
+ GET /api/dashboard/alerts 200 in 966ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1370ms
+ GET /api/dashboard/alerts 200 in 953ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 739ms
+ GET /api/dashboard/alerts 200 in 989ms
+ GET /login 200 in 96ms
+ GET /favicon.ico 200 in 16ms
+ GET /favicon.ico 200 in 29ms
+ GET /api/auth/session 200 in 28ms
+ GET /api/auth/session 200 in 15ms
+ GET /api/notifications 200 in 250ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 780ms
+ GET /api/dashboard/alerts 200 in 1912ms
+ GET /api/auth/providers 200 in 23ms
+ GET /api/auth/csrf 200 in 18ms
+ POST /api/auth/callback/credentials 401 in 247ms
+ GET /api/auth/signin?callbackUrl=%2Fdashboard 302 in 24ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fdashboard 200 in 87ms
+ GET /favicon.ico 200 in 16ms
+ GET /favicon.ico 200 in 32ms
+ GET /api/auth/session 200 in 31ms
+ GET /api/auth/session 200 in 15ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 768ms
+ GET /api/dashboard/alerts 200 in 1137ms
+ GET /api/notifications 200 in 292ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 628ms
+ GET /api/dashboard/alerts 200 in 2300ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 725ms
+ GET /api/dashboard/alerts 200 in 1056ms
+ GET /api/notifications 200 in 343ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1259ms
+ GET /api/dashboard/alerts 200 in 1736ms
+ GET /api/auth/signin?callbackUrl=%2Fdashboard 302 in 23ms
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fdashboard 200 in 66ms
+ GET /favicon.ico 200 in 16ms
+ GET /favicon.ico 200 in 26ms
+ GET /api/auth/session 200 in 23ms
+ GET /api/auth/session 200 in 12ms
+ GET /api/notifications 200 in 861ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 798ms
+ GET /api/dashboard/alerts 200 in 1690ms
+ GET /api/notifications 200 in 175ms
