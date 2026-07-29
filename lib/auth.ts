@@ -14,12 +14,17 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-        const user = await prisma.user.findUnique({ where: { email: credentials.email } });
-        if (!user) return null;
-        const valid = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!valid) return null;
-        return { id: user.id, name: user.name, email: user.email, role: user.role, tokenVersion: user.tokenVersion };
+        try {
+          if (!credentials?.email || !credentials?.password) return null;
+          const user = await prisma.user.findUnique({ where: { email: credentials.email } });
+          if (!user) { console.error("[auth] user not found:", credentials.email); return null; }
+          const valid = await bcrypt.compare(credentials.password, user.passwordHash);
+          if (!valid) { console.error("[auth] password mismatch for:", credentials.email); return null; }
+          return { id: user.id, name: user.name, email: user.email, role: user.role, tokenVersion: user.tokenVersion };
+        } catch (e) {
+          console.error("[auth] authorize error:", e);
+          return null;
+        }
       },
     }),
   ],
