@@ -1,0 +1,785 @@
+
+> placement-app@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 2.7s
+ ○ Compiling /api/placements ...
+ ✓ Compiled /api/placements in 1785ms (300 modules)
+ ○ Compiling / ...
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 3837ms
+ ✓ Compiled / in 4.6s (856 modules)
+ GET / 307 in 4988ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1155ms (462 modules)
+ ○ Compiling /dashboard ...
+ ✓ Compiled /dashboard in 7.5s (897 modules)
+ GET /dashboard 200 in 7675ms
+ GET /dashboard 200 in 2035ms
+ ✓ Compiled /favicon.ico in 317ms (630 modules)
+ GET /favicon.ico 200 in 405ms
+ ✓ Compiled /api/auth/[...nextauth] in 216ms (632 modules)
+ ✓ Compiled (634 modules)
+ GET /api/auth/session 200 in 976ms
+ GET /api/auth/session 200 in 25ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1605ms
+ GET /api/dashboard/alerts 200 in 1959ms
+ GET /api/dashboard/alerts 200 in 875ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 998ms
+ GET /api/dashboard/alerts 200 in 927ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 764ms
+ GET /api/dashboard/alerts 200 in 850ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 620ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 784ms
+ GET /api/dashboard/alerts 200 in 1185ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 762ms
+ GET /api/dashboard/alerts 200 in 923ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 982ms
+ GET /api/dashboard/alerts 200 in 1154ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 753ms
+ GET /api/dashboard/alerts 200 in 932ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 629ms
+ GET /api/dashboard/alerts 200 in 1864ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 539ms
+ GET /api/dashboard/alerts 200 in 1020ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 633ms
+ GET /api/dashboard/alerts 200 in 1117ms
+ ✓ Compiled in 867ms (910 modules)
+ GET /dashboard?_rsc=syt8b 200 in 686ms
+ ✓ Compiled /favicon.ico in 142ms (629 modules)
+ GET /favicon.ico 200 in 225ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1171ms
+ GET /dashboard 200 in 868ms
+ GET /favicon.ico 200 in 16ms
+ GET /favicon.ico 200 in 44ms
+ ✓ Compiled /api/auth/[...nextauth] in 130ms (631 modules)
+ GET /api/auth/session 200 in 217ms
+ GET /api/auth/session 200 in 18ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 586ms
+ GET /api/dashboard/alerts 200 in 858ms
+ GET /api/dashboard/alerts 200 in 865ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 610ms
+ GET /api/dashboard/alerts 200 in 1539ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 640ms
+ GET /api/dashboard/alerts 200 in 978ms
+ GET /dashboard 200 in 734ms
+ GET /favicon.ico 200 in 28ms
+ GET /favicon.ico 200 in 48ms
+ GET /api/auth/session 200 in 54ms
+ GET /api/auth/session 200 in 19ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 588ms
+ GET /api/dashboard/alerts 200 in 878ms
+ GET /api/dashboard/alerts 200 in 844ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 613ms
+ GET /api/dashboard/alerts 200 in 934ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 532ms
+ GET /api/dashboard/alerts 200 in 850ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1889ms
+ GET /api/dashboard/alerts 200 in 2394ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1347ms
+ GET /api/dashboard/alerts 200 in 1702ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 651ms
+ GET /api/dashboard/alerts 200 in 968ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 742ms
+ GET /api/dashboard/alerts 200 in 1056ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 708ms
+ GET /api/dashboard/alerts 200 in 1087ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 632ms
+ GET /api/dashboard/alerts 200 in 1003ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 717ms
+ GET /api/dashboard/alerts 200 in 1105ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 730ms
+ GET /api/dashboard/alerts 200 in 1027ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 628ms
+ GET /api/dashboard/alerts 200 in 940ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 733ms
+ GET /api/dashboard/alerts 200 in 1052ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 723ms
+ GET /api/dashboard/alerts 200 in 1089ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 649ms
+ GET /api/dashboard/alerts 200 in 1017ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 707ms
+ GET /api/dashboard/alerts 200 in 1087ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 744ms
+ GET /api/dashboard/alerts 200 in 1054ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 641ms
+ GET /api/dashboard/alerts 200 in 961ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 749ms
+ GET /api/dashboard/alerts 200 in 1060ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1803ms
+ GET /api/dashboard/alerts 200 in 2231ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 634ms
+ GET /api/dashboard/alerts 200 in 953ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 668ms
+ GET /api/dashboard/alerts 200 in 987ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1227ms
+ GET /api/dashboard/alerts 200 in 1626ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 589ms
+ GET /api/dashboard/alerts 200 in 909ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 663ms
+ GET /api/dashboard/alerts 200 in 1044ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 670ms
+ GET /api/dashboard/alerts 200 in 982ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 572ms
+ GET /api/dashboard/alerts 200 in 898ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 656ms
+ GET /api/dashboard/alerts 200 in 976ms
+ GET /api/auth/session 200 in 111ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 637ms
+ GET /api/dashboard/alerts 200 in 963ms
+ GET /dashboard 200 in 1148ms
+ GET /favicon.ico 200 in 33ms
+ GET /api/auth/session 200 in 48ms
+ GET /api/auth/session 200 in 15ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 665ms
+ GET /api/dashboard/alerts 200 in 990ms
+ GET /api/dashboard/alerts 200 in 876ms
+ ○ Compiling /admin/placements/new ...
+ ✓ Compiled /admin/placements/new in 949ms (951 modules)
+ ✓ Compiled in 220ms (313 modules)
+ GET /dashboard?_rsc=syt8b 200 in 801ms
+ GET /admin/placements/new?_rsc=txk04 200 in 976ms
+ GET /favicon.ico 200 in 36ms
+ GET /admin/placements/new?_rsc=txk04 200 in 930ms
+ GET /dashboard?_rsc=syt8b 200 in 1262ms
+ GET /api/dashboard/alerts 200 in 910ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1095ms
+ ✓ Compiled /api/master/client-routes in 161ms (640 modules)
+ GET /api/master/client-routes?clientId=cms5xzti20000qeqplxlora7z 200 in 591ms
+ ✓ Compiled /api/master/lookup in 289ms (642 modules)
+ GET /api/master/lookup?clientId=cms5xzti20000qeqplxlora7z&routeId=cms5xzxf4000cqeqpn1wvxa5o 200 in 516ms
+ GET /dashboard?_rsc=pcfej 200 in 706ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 598ms
+ GET /api/dashboard/alerts 200 in 946ms
+ GET /api/dashboard/alerts 200 in 923ms
+ GET /api/auth/session 200 in 73ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 552ms
+ GET /api/dashboard/alerts 200 in 901ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 651ms
+ GET /api/dashboard/alerts 200 in 1514ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 581ms
+ GET /api/dashboard/alerts 200 in 868ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 671ms
+ GET /api/dashboard/alerts 200 in 943ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 601ms
+ GET /api/dashboard/alerts 200 in 855ms
+ GET /api/dashboard/alerts 200 in 1137ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 2267ms
+ GET /api/dashboard/alerts 200 in 906ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1772ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 635ms
+ GET /api/dashboard/alerts 200 in 1589ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 544ms
+ GET /api/dashboard/alerts 200 in 877ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 644ms
+ GET /api/dashboard/alerts 200 in 982ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 575ms
+ GET /api/dashboard/alerts 200 in 903ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 625ms
+ GET /api/dashboard/alerts 200 in 967ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 554ms
+ GET /api/dashboard/alerts 200 in 914ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 629ms
+ GET /api/dashboard/alerts 200 in 1006ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 620ms
+ GET /api/dashboard/alerts 200 in 954ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 631ms
+ GET /api/dashboard/alerts 200 in 964ms
+ GET /api/dashboard/alerts 200 in 1012ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1783ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 669ms
+ GET /api/dashboard/alerts 200 in 1588ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 665ms
+ GET /api/dashboard/alerts 200 in 965ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 585ms
+ GET /api/dashboard/alerts 200 in 883ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 647ms
+ GET /api/dashboard/alerts 200 in 946ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 712ms
+ GET /api/dashboard/alerts 200 in 1080ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 678ms
+ GET /api/dashboard/alerts 200 in 1004ms
+ GET /api/dashboard/alerts 200 in 985ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 2040ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 639ms
+ GET /api/dashboard/alerts 200 in 1855ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 573ms
+ GET /api/dashboard/alerts 200 in 1036ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 640ms
+ GET /api/dashboard/alerts 200 in 1109ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 649ms
+ GET /api/dashboard/alerts 200 in 1119ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 575ms
+ GET /api/dashboard/alerts 200 in 1035ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 653ms
+ GET /api/dashboard/alerts 200 in 1135ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 635ms
+ GET /api/dashboard/alerts 200 in 1102ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 549ms
+ GET /api/dashboard/alerts 200 in 1000ms
+ GET /api/dashboard/alerts 200 in 1154ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1978ms
+ GET /api/auth/session 200 in 93ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 804ms
+ GET /api/dashboard/alerts 200 in 1218ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 600ms
+ GET /api/dashboard/alerts 200 in 1013ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 610ms
+ GET /api/dashboard/alerts 200 in 1018ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 714ms
+ GET /api/dashboard/alerts 200 in 1132ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 625ms
+ GET /api/dashboard/alerts 200 in 1049ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 704ms
+ GET /api/dashboard/alerts 200 in 1118ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 713ms
+ GET /api/dashboard/alerts 200 in 1138ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 728ms
+ GET /api/dashboard/alerts 200 in 2165ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 632ms
+ GET /api/dashboard/alerts 200 in 895ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 739ms
+ GET /api/dashboard/alerts 200 in 980ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 692ms
+ GET /api/dashboard/alerts 200 in 948ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 628ms
+ GET /api/dashboard/alerts 200 in 905ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 693ms
+ GET /api/dashboard/alerts 200 in 938ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 695ms
+ GET /api/dashboard/alerts 200 in 960ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 620ms
+ GET /api/dashboard/alerts 200 in 878ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 727ms
+ GET /api/dashboard/alerts 200 in 996ms
+ GET /api/dashboard/alerts 200 in 973ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1835ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1115ms
+ GET /api/dashboard/alerts 200 in 1512ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 657ms
+ GET /api/dashboard/alerts 200 in 981ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 628ms
+ GET /api/dashboard/alerts 200 in 962ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 567ms
+ GET /api/dashboard/alerts 200 in 899ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 649ms
+ GET /api/dashboard/alerts 200 in 996ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 661ms
+ GET /api/dashboard/alerts 200 in 991ms
+ GET /api/dashboard/alerts 200 in 933ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1770ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 677ms
+ GET /api/dashboard/alerts 200 in 1656ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 634ms
+ GET /api/dashboard/alerts 200 in 954ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 582ms
+ GET /api/dashboard/alerts 200 in 888ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 666ms
+ GET /api/dashboard/alerts 200 in 964ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 668ms
+ GET /api/dashboard/alerts 200 in 971ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 592ms
+ GET /api/dashboard/alerts 200 in 887ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 651ms
+ GET /api/dashboard/alerts 200 in 969ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 653ms
+ GET /api/dashboard/alerts 200 in 966ms
+ GET /api/dashboard/alerts 200 in 958ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 2161ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 685ms
+ GET /api/dashboard/alerts 200 in 1820ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 641ms
+ GET /api/dashboard/alerts 200 in 1111ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 570ms
+ GET /api/dashboard/alerts 200 in 1040ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 644ms
+ GET /api/dashboard/alerts 200 in 1112ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 695ms
+ GET /api/dashboard/alerts 200 in 1125ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 625ms
+ GET /api/dashboard/alerts 200 in 1039ms
+ GET /api/dashboard/alerts 200 in 1176ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 2015ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 758ms
+ GET /api/dashboard/alerts 200 in 1552ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 702ms
+ GET /api/dashboard/alerts 200 in 910ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 781ms
+ GET /api/dashboard/alerts 200 in 943ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 729ms
+ GET /api/dashboard/alerts 200 in 928ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 653ms
+ GET /api/dashboard/alerts 200 in 863ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 749ms
+ GET /api/dashboard/alerts 200 in 942ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 740ms
+ GET /api/dashboard/alerts 200 in 941ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 648ms
+ GET /api/dashboard/alerts 200 in 860ms
+ GET /api/dashboard/alerts 200 in 959ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1718ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 639ms
+ GET /api/dashboard/alerts 200 in 1556ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 567ms
+ GET /api/dashboard/alerts 200 in 875ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 643ms
+ GET /api/dashboard/alerts 200 in 971ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 630ms
+ GET /api/dashboard/alerts 200 in 940ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 579ms
+ GET /api/dashboard/alerts 200 in 879ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 650ms
+ GET /api/dashboard/alerts 200 in 951ms
+ GET /api/dashboard/alerts 200 in 972ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1736ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 561ms
+ GET /api/dashboard/alerts 200 in 1454ms
+ GET /api/auth/session 200 in 80ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 680ms
+ GET /api/dashboard/alerts 200 in 936ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 593ms
+ GET /api/dashboard/alerts 200 in 877ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 551ms
+ GET /api/dashboard/alerts 200 in 823ms
+ ○ Compiling /admin/analytics ...
+ ✓ Compiled /admin/analytics in 1088ms (927 modules)
+ GET /admin/analytics?_rsc=1dzr2 200 in 983ms
+ GET /dashboard?_rsc=syt8b 200 in 1107ms
+ ✓ Compiled /favicon.ico in 176ms (642 modules)
+ GET /favicon.ico 200 in 259ms
+ ✓ Compiled in 642ms (956 modules)
+ GET /admin/analytics?_rsc=1dzr2 200 in 436ms
+ GET /dashboard?_rsc=syt8b 200 in 1043ms
+ GET /favicon.ico 200 in 21ms
+ ✓ Compiled /master in 435ms (963 modules)
+ GET /master?_rsc=t9d1z 200 in 79ms
+ ✓ Compiled /api/master in 281ms (649 modules)
+ GET /dashboard?_rsc=syt8b 200 in 1014ms
+ GET /favicon.ico 200 in 85ms
+ GET /api/master 200 in 1005ms
+ GET /api/master 200 in 744ms
+ ✓ Compiled in 351ms (965 modules)
+ GET /master?_rsc=t9d1z 200 in 41ms
+ GET /dashboard?_rsc=syt8b 200 in 749ms
+ GET /favicon.ico 200 in 13ms
+ ✓ Compiled in 195ms (316 modules)
+ GET /master?_rsc=t9d1z 200 in 91ms
+ GET /dashboard?_rsc=syt8b 200 in 756ms
+ GET /favicon.ico 200 in 13ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 640ms
+ GET /api/dashboard/alerts 200 in 1418ms
+ ✓ Compiled in 962ms (965 modules)
+ ✓ Compiled in 1ms (649 modules)
+ ✓ Compiled in 1ms (649 modules)
+ ✓ Compiled in 1ms (649 modules)
+ GET /master?_rsc=t9d1z 200 in 987ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 2293ms
+ GET /dashboard?_rsc=syt8b 200 in 2215ms
+ GET /favicon.ico 200 in 19ms
+ ✓ Compiled in 746ms (965 modules)
+ ✓ Compiled in 0ms (649 modules)
+ ✓ Compiled in 1ms (649 modules)
+ ✓ Compiled in 0ms (649 modules)
+ GET /master?_rsc=t9d1z 200 in 771ms
+ GET /dashboard?_rsc=syt8b 200 in 1426ms
+ GET /favicon.ico 200 in 18ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1761ms
+ ✓ Compiled /admin/issues in 370ms (953 modules)
+ ✓ Compiled in 486ms (967 modules)
+ ✓ Compiled in 1ms (651 modules)
+ ✓ Compiled in 1ms (651 modules)
+ ✓ Compiled in 0ms (651 modules)
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1607ms
+ GET /admin/issues?_rsc=1go33 200 in 1531ms
+ GET /dashboard?_rsc=syt8b 200 in 2109ms
+ GET /favicon.ico 200 in 18ms
+ GET /api/master 200 in 722ms
+ GET /api/master 200 in 686ms
+ GET /api/dashboard/alerts 200 in 886ms
+ ✓ Compiled in 627ms (965 modules)
+ ✓ Compiled in 1ms (649 modules)
+ ✓ Compiled in 1ms (649 modules)
+ ✓ Compiled in 0ms (649 modules)
+ GET /master?_rsc=t9d1z 200 in 964ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1506ms
+ GET /dashboard?_rsc=syt8b 200 in 1601ms
+ GET /favicon.ico 200 in 28ms
+ ✓ Compiled / in 268ms (652 modules)
+ GET / 307 in 463ms
+ GET /dashboard 200 in 686ms
+ GET /favicon.ico 200 in 23ms
+ GET /favicon.ico 200 in 13ms
+ ✓ Compiled /api/auth/[...nextauth] in 198ms (654 modules)
+ GET /api/auth/session 200 in 767ms
+ GET /api/auth/session 200 in 19ms
+ GET /api/dashboard/alerts 200 in 879ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1315ms
+ GET /api/dashboard/alerts 200 in 871ms
+ GET /dashboard 200 in 834ms
+ GET /favicon.ico 200 in 24ms
+ GET /favicon.ico 200 in 38ms
+ GET /api/auth/session 200 in 40ms
+ GET /api/auth/session 200 in 12ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 643ms
+ GET /api/dashboard/alerts 200 in 850ms
+ GET /api/dashboard/alerts 200 in 862ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 703ms
+ GET /api/dashboard/alerts 200 in 913ms
+ GET /api/dashboard/alerts 200 in 967ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1819ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 672ms
+ GET /api/dashboard/alerts 200 in 1614ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 896ms
+ GET /api/dashboard/alerts 200 in 1671ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 758ms
+ GET /api/dashboard/alerts 200 in 999ms
+ GET /api/dashboard/alerts 200 in 907ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1830ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 684ms
+ GET /api/dashboard/alerts 200 in 1488ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 669ms
+ GET /api/dashboard/alerts 200 in 908ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 736ms
+ GET /api/dashboard/alerts 200 in 944ms
+ ✓ Compiled in 813ms (932 modules)
+ GET /master?_rsc=t9d1z 200 in 167ms
+ GET /dashboard?_rsc=syt8b 200 in 1184ms
+ ✓ Compiled /favicon.ico in 200ms (645 modules)
+ GET /favicon.ico 200 in 288ms
+ ✓ Compiled in 306ms (316 modules)
+ GET /master?_rsc=t9d1z 200 in 114ms
+ GET /dashboard?_rsc=syt8b 200 in 1413ms
+ GET /favicon.ico 200 in 15ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 727ms
+ GET /api/dashboard/alerts 200 in 977ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 675ms
+ GET /api/dashboard/alerts 200 in 897ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 701ms
+ GET /api/dashboard/alerts 200 in 961ms
+ GET /api/dashboard/alerts 200 in 916ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1961ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 716ms
+ GET /api/dashboard/alerts 200 in 1501ms
+ ✓ Compiled /api/master in 1405ms (932 modules)
+ ✓ Compiled in 1ms (618 modules)
+ GET /master?_rsc=t9d1z 200 in 776ms
+ GET /master?_rsc=t9d1z 200 in 35ms
+ GET /dashboard?_rsc=syt8b 200 in 1669ms
+ GET /api/master 200 in 2526ms
+ GET /dashboard?_rsc=syt8b 200 in 1519ms
+ ✓ Compiled /favicon.ico in 215ms (647 modules)
+ GET /favicon.ico 200 in 289ms
+ GET /api/master 200 in 677ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 687ms
+ GET /api/dashboard/alerts 200 in 1502ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 826ms
+ GET /api/dashboard/alerts 200 in 1144ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 751ms
+ GET /api/dashboard/alerts 200 in 1022ms
+ GET /api/dashboard/alerts 200 in 932ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1555ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 770ms
+ GET /api/dashboard/alerts 200 in 979ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 687ms
+ GET /api/dashboard/alerts 200 in 918ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 695ms
+ GET /api/dashboard/alerts 200 in 910ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 802ms
+ GET /api/dashboard/alerts 200 in 1380ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 770ms
+ GET /api/dashboard/alerts 200 in 967ms
+ GET /api/dashboard/alerts 200 in 1172ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 2173ms
+ GET /api/dashboard/alerts 200 in 1892ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 2190ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 796ms
+ GET /api/dashboard/alerts 200 in 1815ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 838ms
+ GET /api/dashboard/alerts 200 in 1124ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 719ms (618 modules)
+ GET /api/auth/session 200 in 821ms
+ GET /api/auth/session 200 in 49ms
+ ○ Compiling /admin/history ...
+ ✓ Compiled /admin/history in 1509ms (940 modules)
+ GET /admin/history?_rsc=1cj4z 200 in 111ms
+ ✓ Compiled /api/admin/history in 294ms (624 modules)
+ GET /dashboard?_rsc=syt8b 200 in 1284ms
+ GET /api/admin/history?entity=ALL&page=1 200 in 1257ms
+ ✓ Compiled /favicon.ico in 290ms (653 modules)
+ GET /favicon.ico 200 in 387ms
+ GET /api/admin/history?entity=ALL&page=1 200 in 314ms
+ GET /api/dashboard/alerts 200 in 1075ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1271ms
+ ○ Compiling /admin/vehicles ...
+ ✓ Compiled /admin/vehicles in 530ms (977 modules)
+ GET /admin/vehicles?_rsc=1dzud 200 in 54ms
+ ✓ Compiled /api/admin/vehicles in 225ms (659 modules)
+ GET /dashboard?_rsc=syt8b 200 in 795ms
+ GET /favicon.ico 200 in 19ms
+ GET /api/admin/vehicles?withIssues=true 200 in 1001ms
+ GET /api/admin/vehicles?withIssues=true 200 in 406ms
+ ○ Compiling /api/master ...
+ ✓ Compiled /api/master in 551ms (661 modules)
+ GET /api/master 200 in 1540ms
+ GET /api/master 200 in 708ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 973ms
+ GET /api/dashboard/alerts 200 in 1868ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 796ms
+ GET /api/dashboard/alerts 200 in 914ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 799ms
+ GET /api/dashboard/alerts 200 in 899ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 799ms
+ GET /api/dashboard/alerts 200 in 909ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 805ms
+ GET /api/dashboard/alerts 200 in 934ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 814ms
+ GET /api/dashboard/alerts 200 in 947ms
+ GET /api/dashboard/alerts 200 in 944ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1772ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1275ms
+ GET /api/dashboard/alerts 200 in 1449ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 703ms
+ GET /api/dashboard/alerts 200 in 917ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 679ms
+ GET /api/dashboard/alerts 200 in 869ms
+ GET /api/dashboard/alerts 200 in 870ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1750ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 665ms
+ GET /api/dashboard/alerts 200 in 1459ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 675ms
+ GET /api/dashboard/alerts 200 in 879ms
+ ○ Compiling / ...
+ ✓ Compiled / in 637ms (623 modules)
+ GET / 307 in 890ms
+ GET /dashboard 200 in 1146ms
+ ✓ Compiled /favicon.ico in 310ms (652 modules)
+ GET /favicon.ico 200 in 410ms
+ ✓ Compiled /api/auth/[...nextauth] in 297ms (654 modules)
+ GET /api/auth/session 200 in 604ms
+ GET /api/auth/session 200 in 20ms
+ GET /api/dashboard/alerts 200 in 944ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1154ms
+ GET /api/dashboard/alerts 200 in 813ms
+ GET /master 200 in 300ms
+ GET /favicon.ico 200 in 20ms
+ GET /favicon.ico 200 in 34ms
+ ○ Compiling /api/master ...
+ ✓ Compiled /api/master in 624ms (656 modules)
+ GET /api/auth/session 200 in 910ms
+ GET /api/auth/session 200 in 19ms
+ GET /api/master 200 in 1693ms
+ GET /api/master 200 in 654ms
+ GET /master 200 in 237ms
+ GET /favicon.ico 200 in 30ms
+ GET /favicon.ico 200 in 44ms
+ GET /api/auth/session 200 in 42ms
+ GET /api/auth/session 200 in 18ms
+ GET /api/master 200 in 499ms
+ GET /api/master 200 in 734ms
+ ✓ Compiled in 869ms (910 modules)
+ GET /master?_rsc=md24f 200 in 188ms
+ GET /master?_rsc=t9d1z 200 in 190ms
+ ✓ Compiled /favicon.ico in 200ms (622 modules)
+ GET /favicon.ico 200 in 280ms
+ ✓ Compiled in 1510ms (942 modules)
+ GET /master?_rsc=t9d1z 200 in 163ms
+ GET /master?_rsc=md24f 200 in 167ms
+ ✓ Compiled /api/master in 406ms (645 modules)
+ ✓ Compiled in 1ms (645 modules)
+ ✓ Compiled in 0ms (645 modules)
+ ✓ Compiled in 1ms (645 modules)
+ GET /favicon.ico 200 in 1045ms
+ GET /master?_rsc=t9d1z 200 in 881ms
+ GET /master?_rsc=md24f 200 in 882ms
+ GET /favicon.ico 200 in 18ms
+ GET /api/master 200 in 1981ms
+ GET /api/master 200 in 2133ms
+ ✓ Compiled in 1099ms (910 modules)
+ GET /master?_rsc=md24f 200 in 232ms
+ GET /master?_rsc=t9d1z 200 in 233ms
+ ✓ Compiled /favicon.ico in 394ms (616 modules)
+ ✓ Compiled (645 modules)
+ GET /favicon.ico 200 in 815ms
+ GET /api/master 200 in 1644ms
+ GET /api/master 200 in 1736ms
+ ✓ Compiled in 709ms (965 modules)
+ GET /master?_rsc=t9d1z 200 in 130ms
+ GET /master?_rsc=md24f 200 in 143ms
+ GET /favicon.ico 200 in 44ms
+ GET /api/master 200 in 460ms
+ GET /api/master 200 in 768ms
+ GET /api/master 200 in 440ms
+ GET /api/master 200 in 830ms
+ ✓ Compiled in 719ms (965 modules)
+ ✓ Compiled in 0ms (645 modules)
+ ✓ Compiled in 0ms (645 modules)
+ ✓ Compiled in 1ms (645 modules)
+ GET /master?_rsc=t9d1z 200 in 823ms
+ GET /master?_rsc=md24f 200 in 828ms
+ GET /favicon.ico 200 in 19ms
+ GET /api/master 200 in 1782ms
+ GET /api/master 200 in 1925ms
+ GET /api/master 200 in 495ms
+ GET /api/master 200 in 749ms
+ ✓ Compiled in 558ms (965 modules)
+ ✓ Compiled in 1ms (645 modules)
+ ✓ Compiled in 0ms (645 modules)
+ ✓ Compiled in 1ms (645 modules)
+ GET /master?_rsc=md24f 200 in 710ms
+ GET /master?_rsc=t9d1z 200 in 711ms
+ GET /favicon.ico 200 in 18ms
+ GET /api/master 200 in 1327ms
+ GET /api/master 200 in 1429ms
+ ✓ Compiled in 719ms (965 modules)
+ ✓ Compiled in 1ms (645 modules)
+ ✓ Compiled in 0ms (645 modules)
+ ✓ Compiled in 1ms (645 modules)
+ GET /master?_rsc=md24f 200 in 753ms
+ GET /master?_rsc=t9d1z 200 in 754ms
+ GET /favicon.ico 200 in 17ms
+ GET /api/master 200 in 1347ms
+ GET /api/master 200 in 1521ms
+ ✓ Compiled in 784ms (965 modules)
+ GET /master?_rsc=t9d1z 200 in 116ms
+ GET /master?_rsc=md24f 200 in 118ms
+ GET /favicon.ico 200 in 28ms
+ GET /api/master 200 in 570ms
+ GET /api/master 200 in 742ms
+ ✓ Compiled in 720ms (965 modules)
+ ✓ Compiled in 0ms (645 modules)
+ ✓ Compiled in 0ms (645 modules)
+ ✓ Compiled in 2ms (645 modules)
+ GET /master?_rsc=md24f 200 in 758ms
+ GET /master?_rsc=t9d1z 200 in 758ms
+ GET /favicon.ico 200 in 17ms
+ GET /api/master 200 in 1183ms
+ GET /api/master 200 in 1265ms
+ ✓ Compiled in 660ms (965 modules)
+ ✓ Compiled in 1ms (645 modules)
+ ✓ Compiled in 2ms (645 modules)
+ ✓ Compiled in 0ms (645 modules)
+ GET /master?_rsc=t9d1z 200 in 746ms
+ GET /master?_rsc=md24f 200 in 746ms
+ GET /favicon.ico 200 in 22ms
+ GET /api/master 200 in 1200ms
+ GET /api/master 200 in 1314ms
+ ✓ Compiled in 999ms (965 modules)
+ GET /master?_rsc=md24f 200 in 127ms
+ GET /master?_rsc=t9d1z 200 in 132ms
+ GET /favicon.ico 200 in 19ms
+ GET /api/master 200 in 506ms
+ GET /api/master 200 in 590ms
+ GET /master 200 in 130ms
+ GET /favicon.ico 200 in 18ms
+ GET /favicon.ico 200 in 42ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 561ms (647 modules)
+ GET /api/auth/session 200 in 653ms
+ GET /api/auth/session 200 in 17ms
+ GET /api/master 200 in 763ms
+ GET /api/master 200 in 698ms
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3319), routine: Some("ProcessInterrupts") }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3319), routine: Some("ProcessInterrupts") }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3319), routine: Some("ProcessInterrupts") }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3319), routine: Some("ProcessInterrupts") }) }
+prisma:error Error in PostgreSQL connection: Error { kind: Db, cause: Some(DbError { severity: "FATAL", parsed_severity: Some(Fatal), code: SqlState(E57P01), message: "terminating connection due to administrator command", detail: None, hint: None, position: None, where_: None, schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("postgres.c"), line: Some(3319), routine: Some("ProcessInterrupts") }) }
+ GET /api/auth/session 200 in 113ms
+ GET /master 200 in 146ms
+ GET /favicon.ico 200 in 23ms
+ GET /api/auth/session 200 in 31ms
+ GET /api/auth/session 200 in 18ms
+ GET /api/master 200 in 1973ms
+ GET /api/master 200 in 504ms
+ GET /api/auth/session 200 in 53ms
+ GET /master 200 in 73ms
+ GET /favicon.ico 200 in 39ms
+ GET /api/auth/session 200 in 38ms
+ GET /api/auth/session 200 in 13ms
+ GET /api/master 200 in 641ms
+ GET /api/master 200 in 824ms
+ ✓ Compiled in 1074ms (910 modules)
+ GET /master?_rsc=md24f 200 in 163ms
+ GET /master?_rsc=md24f 200 in 173ms
+ ✓ Compiled /favicon.ico in 247ms (616 modules)
+ ✓ Compiled (645 modules)
+ GET /favicon.ico 200 in 480ms
+ GET /api/master 200 in 1817ms
+ GET /api/master 200 in 2125ms
+ ✓ Compiled in 1027ms (965 modules)
+ GET /master?_rsc=md24f 200 in 97ms
+ GET /master?_rsc=md24f 200 in 100ms
+ GET /favicon.ico 200 in 23ms
+ ✓ Compiled in 651ms (965 modules)
+ GET /master?_rsc=md24f 200 in 184ms
+ GET /master?_rsc=md24f 200 in 186ms
+ GET /favicon.ico 200 in 18ms
+ ✓ Compiled in 687ms (965 modules)
+ GET /master?_rsc=md24f 200 in 53ms
+ GET /master?_rsc=md24f 200 in 54ms
+ GET /favicon.ico 200 in 25ms
+ ✓ Compiled in 634ms (965 modules)
+ GET /master?_rsc=md24f 200 in 90ms
+ GET /master?_rsc=md24f 200 in 97ms
+ GET /favicon.ico 200 in 22ms
+ ○ Compiling /api/auth/[...nextauth] ...
+ ✓ Compiled /api/auth/[...nextauth] in 686ms (624 modules)
+ GET /api/auth/session 200 in 793ms
+ ○ Compiling /d1-pending ...
+ ✓ Compiled /d1-pending in 798ms (938 modules)
+ GET /d1-pending?_rsc=lje8c 200 in 342ms
+ GET /dashboard?_rsc=16jui 200 in 203ms
+ ✓ Compiled /api/placements in 230ms (653 modules)
+ ✓ Compiled (657 modules)
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 1053ms
+ GET /api/dashboard/alerts 200 in 1211ms
+ ✓ Compiled /api/placements/latest-date in 284ms (659 modules)
+ GET /api/dashboard/alerts 200 in 636ms
+ GET /api/placements/latest-date 200 in 808ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 190ms
+ GET /api/dashboard/alerts 200 in 459ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 189ms
+ GET /api/dashboard/alerts 200 in 295ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 197ms
+ GET /api/dashboard/alerts 200 in 301ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 188ms
+ GET /api/dashboard/alerts 200 in 300ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 187ms
+ GET /api/dashboard/alerts 200 in 290ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 201ms
+ GET /api/dashboard/alerts 200 in 305ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 736ms
+ GET /api/dashboard/alerts 200 in 872ms
+ ✓ Compiled in 1046ms (942 modules)
+ GET /master?_rsc=md24f 200 in 183ms
+ GET /dashboard?_rsc=tu1zy 200 in 384ms
+ ✓ Compiled /favicon.ico in 204ms (649 modules)
+ GET /favicon.ico 200 in 287ms
+ ✓ Compiled in 324ms (322 modules)
+ GET /master?_rsc=md24f 200 in 119ms
+ GET /favicon.ico 200 in 14ms
+ GET /dashboard?_rsc=tu1zy 200 in 277ms
+ ✓ Compiled in 665ms (971 modules)
+ GET /master?_rsc=md24f 200 in 80ms
+ GET /favicon.ico 200 in 40ms
+ GET /dashboard?_rsc=tu1zy 200 in 264ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 190ms
+ GET /api/dashboard/alerts 200 in 212ms
+ ✓ Compiled in 569ms (971 modules)
+ GET /master?_rsc=md24f 200 in 60ms
+ GET /favicon.ico 200 in 19ms
+ GET /dashboard?_rsc=tu1zy 200 in 222ms
+ ✓ Compiled in 386ms (971 modules)
+ GET /master?_rsc=md24f 200 in 47ms
+ GET /favicon.ico 200 in 13ms
+ GET /dashboard?_rsc=tu1zy 200 in 163ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 278ms
+ GET /api/dashboard/alerts 200 in 355ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 192ms
+ GET /api/dashboard/alerts 200 in 251ms
+ GET /api/placements?from=2026-07-27&to=2026-07-29 200 in 179ms
+ GET /api/dashboard/alerts 200 in 248ms
