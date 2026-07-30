@@ -349,7 +349,7 @@ export default function MasterPage() {
   // ── User CRUD ────────────────────────────────────────────────────────────
   async function saveUser() {
     if (!userName.trim()) return setFormErr("Name is required");
-    if (userModal?.mode === "add" && !userEmail.trim()) return setFormErr("Email is required");
+    if (!userEmail.trim()) return setFormErr("Email is required");
     if (userModal?.mode === "add" && userPassword.length < 6) return setFormErr("Password must be at least 6 characters");
     setSaving(true); setFormErr("");
     try {
@@ -357,7 +357,7 @@ export default function MasterPage() {
         const editedUser = (userModal as { mode: "edit"; user: User }).user;
         const res = await fetch(`/api/admin/users/${editedUser.id}`, {
           method: "PATCH", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: userName, role: userRole }),
+          body: JSON.stringify({ name: userName, email: userEmail, role: userRole }),
         });
         if (!res.ok) { setFormErr((await res.json()).error); return; }
 
@@ -618,12 +618,10 @@ export default function MasterPage() {
                 <label className={labelCls}>Full Name *</label>
                 <input value={userName} onChange={e => setUserName(e.target.value)} placeholder="e.g. Rahul Sharma" className={inputCls} />
               </div>
-              {userModal.mode === "add" && (
-                <div>
-                  <label className={labelCls}>Email *</label>
-                  <input type="email" value={userEmail} onChange={e => setUserEmail(e.target.value)} placeholder="e.g. rahul@company.com" className={inputCls} />
-                </div>
-              )}
+              <div>
+                <label className={labelCls}>Email *</label>
+                <input type="email" value={userEmail} onChange={e => setUserEmail(e.target.value)} placeholder="e.g. rahul@company.com" className={inputCls} />
+              </div>
               {userModal.mode === "add" && (
                 <div>
                   <label className={labelCls}>Password * (min 6 chars)</label>
@@ -956,7 +954,7 @@ export default function MasterPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button onClick={() => {
                               setUserModal({ mode: "edit", user });
-                              setUserName(user.name); setUserRole(user.role); setFormErr("");
+                              setUserName(user.name); setUserEmail(user.email); setUserRole(user.role); setFormErr("");
                             }} className="text-xs text-blue-600 hover:underline font-medium">Edit</button>
                             <button onClick={() => setDeleteTarget({ type: "user", id: user.id, label: `User "${user.name}" (${ROLE_LABELS[user.role] ?? user.role})` })}
                               className="text-xs text-red-500 hover:underline font-medium">Delete</button>
