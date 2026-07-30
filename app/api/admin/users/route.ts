@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hash } from "bcryptjs";
 import { logAudit } from "@/lib/audit";
 
 export async function GET() {
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
   }
 
-  const passwordHash = await bcrypt.hash(password, 10);
+  const passwordHash = await hash(password, 10);
   const user = await prisma.user.create({
     data: { name: name.trim(), email: email.trim().toLowerCase(), passwordHash, role },
     select: { id: true, name: true, email: true, role: true },
