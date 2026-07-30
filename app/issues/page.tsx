@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   ISSUE_CATEGORY_LABELS, ISSUE_STATUS_LABELS, ISSUE_VALUE_LABELS,
 } from "@/lib/constants";
+import BackButton from "@/components/BackButton";
 
 type Issue = {
   id: string;
@@ -445,9 +446,12 @@ export default function IssuesPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Issues</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Track and resolve operational issues</p>
+      <div className="flex items-center gap-3">
+        <BackButton />
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Issues</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Track and resolve operational issues</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3">

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { Suspense } from "react";
 import PendingFilters from "@/components/PendingFilters";
+import BackButton from "@/components/BackButton";
 import { DRIVER_ISSUE_LABELS, MAINTENANCE_ISSUE_LABELS, ELOCK_STATUS_LABELS, IDFY_STATUS_LABELS, EQUIPMENT_STATUS_LABELS } from "@/lib/constants";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -92,9 +93,12 @@ export default async function D1PendingPage({ searchParams }: { searchParams: Se
     <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">D-1 Pending Issues</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Issues flagged during D-1 planning · {filtered.length} trip{filtered.length !== 1 ? "s" : ""}</p>
+        <div className="flex items-center gap-3">
+          <BackButton />
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">D-1 Pending Issues</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Issues flagged during D-1 planning · {filtered.length} trip{filtered.length !== 1 ? "s" : ""}</p>
+          </div>
         </div>
         <div className="flex gap-3 text-sm">
           <span className="px-3 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-lg font-semibold">{driverCount} Driver</span>
