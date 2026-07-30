@@ -3,18 +3,19 @@ import { useEffect, useState } from "react";
 
 type User = { id: string; name: string; email: string; role: string };
 
-const ROLES = ["ADMIN", "PLANNING_TEAM", "PLACEMENT_TEAM", "DRIVER_MANAGEMENT", "MAINTENANCE_TEAM", "KAM"];
+const ROLES = ["ADMIN", "PLANNING_TEAM", "PLACEMENT_TEAM", "DRIVER_MANAGEMENT", "MAINTENANCE_TEAM", "STORE_AND_TYRE", "KAM"];
 const ROLE_COLOR: Record<string, string> = {
   ADMIN: "bg-purple-100 text-purple-700",
   PLANNING_TEAM: "bg-blue-100 text-blue-700",
   PLACEMENT_TEAM: "bg-green-100 text-green-700",
   DRIVER_MANAGEMENT: "bg-orange-100 text-orange-700",
   MAINTENANCE_TEAM: "bg-pink-100 text-pink-700",
+  STORE_AND_TYRE: "bg-yellow-100 text-yellow-700",
   KAM: "bg-red-100 text-red-700",
 };
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Admin", PLANNING_TEAM: "Planning Team", PLACEMENT_TEAM: "Placement Team",
-  DRIVER_MANAGEMENT: "Driver Mgmt", MAINTENANCE_TEAM: "Maintenance", KAM: "KAM",
+  DRIVER_MANAGEMENT: "Driver Mgmt", MAINTENANCE_TEAM: "Maintenance", STORE_AND_TYRE: "Store & Tyre", KAM: "KAM",
 };
 
 export default function UsersTable({ initialUsers }: { initialUsers?: User[] }) {

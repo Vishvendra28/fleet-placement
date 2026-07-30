@@ -19,6 +19,8 @@ export async function GET(req: NextRequest) {
     where.issueCategory = "DRIVER";
   } else if (role === "MAINTENANCE_TEAM") {
     where.issueCategory = { in: ["MAINTENANCE", "EQUIPMENT"] };
+  } else if (role === "STORE_AND_TYRE") {
+    where.issueCategory = "EQUIPMENT";
   } else if (role !== "ADMIN" && role !== "PLANNING_TEAM" && role !== "PLACEMENT_TEAM") {
     return NextResponse.json([]);
   }

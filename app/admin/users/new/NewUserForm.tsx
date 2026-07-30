@@ -7,6 +7,7 @@ const ROLES = [
   { value: "PLACEMENT_TEAM", label: "Placement Team" },
   { value: "DRIVER_MANAGEMENT", label: "Driver Management" },
   { value: "MAINTENANCE_TEAM", label: "Maintenance Team" },
+  { value: "STORE_AND_TYRE", label: "Store & Tyre" },
   { value: "KAM", label: "KAM" },
   { value: "ADMIN", label: "Admin" },
 ];

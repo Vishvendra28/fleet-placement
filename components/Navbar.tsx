@@ -9,12 +9,12 @@ type Notif = { id: string; message: string; read: boolean; createdAt: string };
 
 const ROLE_LABEL: Record<Role, string> = {
   ADMIN: "Admin", PLANNING_TEAM: "Planning", PLACEMENT_TEAM: "Placement",
-  DRIVER_MANAGEMENT: "Driver Mgmt", MAINTENANCE_TEAM: "Maintenance", KAM: "KAM",
+  DRIVER_MANAGEMENT: "Driver Mgmt", MAINTENANCE_TEAM: "Maintenance", STORE_AND_TYRE: "Store & Tyre", KAM: "KAM",
 };
 const ROLE_COLOR: Record<Role, string> = {
   ADMIN: "bg-purple-100 text-purple-700", PLANNING_TEAM: "bg-blue-100 text-blue-700",
   PLACEMENT_TEAM: "bg-green-100 text-green-700", DRIVER_MANAGEMENT: "bg-orange-100 text-orange-700",
-  MAINTENANCE_TEAM: "bg-pink-100 text-pink-700", KAM: "bg-red-100 text-red-700",
+  MAINTENANCE_TEAM: "bg-pink-100 text-pink-700", STORE_AND_TYRE: "bg-yellow-100 text-yellow-700", KAM: "bg-red-100 text-red-700",
 };
 
 export default function Navbar({ user }: { user: User }) {
@@ -59,7 +59,7 @@ export default function Navbar({ user }: { user: User }) {
 
       <nav className="flex items-center gap-1 text-sm font-medium">
         <Link href="/dashboard" className="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors">Dashboard</Link>
-        {(user.role === "DRIVER_MANAGEMENT" || user.role === "MAINTENANCE_TEAM" || user.role === "PLANNING_TEAM" || user.role === "PLACEMENT_TEAM") && (
+        {(user.role === "DRIVER_MANAGEMENT" || user.role === "MAINTENANCE_TEAM" || user.role === "STORE_AND_TYRE" || user.role === "PLANNING_TEAM" || user.role === "PLACEMENT_TEAM") && (
           <Link href="/issues" className="px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-blue-600 transition-colors">Issues</Link>
         )}
         {user.role === "ADMIN" && (
