@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ISSUE_VALUE_LABELS } from "@/lib/constants";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 
 export default async function AnalyticsPage() {
   const thirtyDaysAgo = new Date();
@@ -67,7 +68,7 @@ export default async function AnalyticsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
           <p className="text-sm text-gray-500 mt-0.5">Last 30 days — operational performance</p>
         </div>
-        <Link href="/admin" className="text-sm text-gray-500 hover:underline">← Back to Admin</Link>
+        <BackButton />
       </div>
 
       {/* Summary tiles */}

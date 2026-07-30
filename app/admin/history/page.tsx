@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import BackButton from "@/components/BackButton";
 
 type Log = {
   id: string;
@@ -71,10 +72,13 @@ export default function HistoryPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div>
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Admin</p>
-        <h1 className="text-2xl font-bold text-slate-900">Activity History</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Every change made in the system — who did what and when</p>
+      <div className="flex items-center gap-3">
+        <BackButton />
+        <div>
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Admin</p>
+          <h1 className="text-2xl font-bold text-slate-900">Activity History</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Every change made in the system — who did what and when</p>
+        </div>
       </div>
 
       {/* Filters */}

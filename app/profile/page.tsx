@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
+import BackButton from "@/components/BackButton";
 
 const ROLE_LABEL: Record<Role, string> = {
   ADMIN: "Admin",
@@ -75,7 +76,10 @@ export default async function ProfilePage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+      <div className="flex items-center gap-3">
+        <BackButton />
+        <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+      </div>
 
       {/* Identity card */}
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex items-center gap-5">

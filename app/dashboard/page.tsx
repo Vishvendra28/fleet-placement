@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import PlacementTable from "@/components/PlacementTable";
 import DashboardAlerts from "@/components/DashboardAlerts";
+import BackButton from "@/components/BackButton";
 import Link from "next/link";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -47,9 +48,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
     return (
       <div>
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-slate-900">Daily Placements</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{ROLE_LABELS[session?.user.role ?? ""] ?? session?.user.role}</p>
+        <div className="mb-6 flex items-center gap-3">
+          <BackButton />
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Daily Placements</h1>
+            <p className="text-sm text-slate-500 mt-0.5">{ROLE_LABELS[session?.user.role ?? ""] ?? session?.user.role}</p>
+          </div>
         </div>
         <DashboardAlerts userRole={session!.user.role} />
         <div className="mt-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
@@ -74,9 +78,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Admin Dashboard</p>
-          <h1 className="text-2xl font-bold text-slate-900">Fleet Overview</h1>
+        <div className="flex items-center gap-3">
+          <BackButton />
+          <div>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Admin Dashboard</p>
+            <h1 className="text-2xl font-bold text-slate-900">Fleet Overview</h1>
+          </div>
         </div>
         <Link
           href="/admin/placements/new"

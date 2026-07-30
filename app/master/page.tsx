@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import BackButton from "@/components/BackButton";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type Client = { id: string; name: string; kam: { id: string; name: string } | null };
@@ -707,10 +708,13 @@ export default function MasterPage() {
 
       {/* Page */}
       <div className="space-y-5">
-        <div>
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Configuration</p>
-          <h1 className="text-2xl font-bold text-slate-900">Master</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Fixed rules governing all placements — {masterRoutes.length} routes across {clients.length} clients</p>
+        <div className="flex items-center gap-3">
+          <BackButton />
+          <div>
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Configuration</p>
+            <h1 className="text-2xl font-bold text-slate-900">Master</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Fixed rules governing all placements — {masterRoutes.length} routes across {clients.length} clients</p>
+          </div>
         </div>
 
         {/* ── SECTION 1: Fleet ─────────────────────────────────────────── */}

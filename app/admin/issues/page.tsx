@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ISSUE_CATEGORY_LABELS, ISSUE_STATUS_LABELS, ISSUE_VALUE_LABELS } from "@/lib/constants";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 
 const STATUS_COLOR: Record<string, string> = {
   OPEN: "bg-red-100 text-red-700",
@@ -54,7 +55,7 @@ export default async function AdminIssuesPage({
           <h1 className="text-2xl font-bold text-gray-900">All Issues</h1>
           <p className="text-sm text-gray-500 mt-0.5">Driver, maintenance and equipment issues across all placements</p>
         </div>
-        <Link href="/admin" className="text-sm text-gray-500 hover:underline">← Back to Admin</Link>
+        <BackButton />
       </div>
 
       {/* Summary */}
