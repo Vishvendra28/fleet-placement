@@ -61,7 +61,7 @@ type Placement = {
 
 type VehicleOption = { id: string; vehicleNumber: string; type: string | null };
 
-type ViewMode = "3days" | "today" | "week" | "month";
+type ViewMode = "week" | "month";
 
 const canPlan = (r: Role) => r === "PLANNING_TEAM" || r === "ADMIN";
 const canPlace = (r: Role) => r === "PLACEMENT_TEAM" || r === "ADMIN";
@@ -129,18 +129,15 @@ function rangeFrom(days: number) {
 
 export default function PlacementTable({
   userRole,
-  initialDate,
   activeIssuesCount,
   initialPlacements,
 }: {
   userRole: Role;
-  initialDate: string;
   activeIssuesCount?: number;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   initialPlacements?: any[];
 }) {
-  const [viewMode, setViewMode] = useState<ViewMode>("3days");
-  const [customDate, setCustomDate] = useState(initialDate);
+  const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [placements, setPlacements] = useState<Placement[]>(initialPlacements ?? []);
   const [loading, setLoading] = useState(!initialPlacements);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -158,13 +155,8 @@ export default function PlacementTable({
     if (!silent) setLoading(true);
 
     const today = todayStr();
-    let url: string;
-    if (viewMode === "today") {
-      url = `/api/placements?date=${customDate}`;
-    } else {
-      const days = viewMode === "3days" ? 2 : viewMode === "week" ? 6 : 29;
-      url = `/api/placements?from=${rangeFrom(days)}&to=${today}`;
-    }
+    const days = viewMode === "week" ? 6 : 29;
+    const url = `/api/placements?from=${rangeFrom(days)}&to=${today}`;
 
     const res = await fetch(url);
     if (!res.ok) { if (!silent) setLoading(false); return; }
@@ -194,7 +186,7 @@ export default function PlacementTable({
       setPlacements(data);
     }
     if (!silent) setLoading(false);
-  }, [viewMode, customDate]);
+  }, [viewMode]);
 
   useEffect(() => {
     if (skipFirstFetch.current) {
@@ -287,7 +279,6 @@ export default function PlacementTable({
   const editPlan = canPlan(userRole);
   const editPlace = canPlace(userRole);
   const isAdmin = userRole === "ADMIN";
-  const isMultiDay = viewMode !== "today";
 
   const uniqueRoutes = useMemo(() => {
     const seen = new Set<string>();
@@ -304,7 +295,6 @@ export default function PlacementTable({
     .filter((p) => !routeFilter || p.route.name === routeFilter);
 
   const groups = useMemo(() => {
-    if (!isMultiDay) return [{ date: customDate, items: displayed }];
     const byDate: Record<string, Placement[]> = {};
     for (const p of displayed) {
       const d = p.date.split("T")[0];
@@ -312,8 +302,7 @@ export default function PlacementTable({
       byDate[d].push(p);
     }
     return Object.keys(byDate).sort().reverse().map((d) => ({ date: d, items: byDate[d] }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMultiDay, displayed, customDate]);
+  }, [displayed]);
 
   const placed = placements.filter((p) => p.finalStatus === "PLACED").length;
   const pending = placements.filter((p) => p.finalStatus === "PENDING").length;
@@ -339,8 +328,6 @@ export default function PlacementTable({
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
           {([
-            { mode: "3days" as ViewMode, label: "3 Days" },
-            { mode: "today" as ViewMode, label: "Today" },
             { mode: "week" as ViewMode, label: "Week" },
             { mode: "month" as ViewMode, label: "Month" },
           ]).map(({ mode, label }) => (
@@ -355,15 +342,6 @@ export default function PlacementTable({
             </button>
           ))}
         </div>
-
-        {viewMode === "today" && (
-          <input
-            type="date"
-            value={customDate}
-            onChange={(e) => { setCustomDate(e.target.value); setFallbackNotice(null); }}
-            className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-          />
-        )}
 
         <div className="relative">
           <input
@@ -463,14 +441,12 @@ export default function PlacementTable({
           <div className="md:hidden space-y-3">
             {groups.map((group) => (
               <React.Fragment key={group.date}>
-                {isMultiDay && (
-                  <div className="px-1 pb-2 pt-1 text-xs font-bold text-slate-700">
-                    {formatLocalDate(group.date)}
-                    <span className="ml-2 font-normal text-slate-400">
-                      {group.items.length} trip{group.items.length !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                )}
+                <div className="px-1 pb-2 pt-1 text-xs font-bold text-slate-700">
+                  {formatLocalDate(group.date)}
+                  <span className="ml-2 font-normal text-slate-400">
+                    {group.items.length} trip{group.items.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
                 {group.items.map((p, i) => {
                   const hasOpen = p.issueAlerts.some((a) => a.status === "OPEN" || a.status === "IN_PROGRESS");
                   return (
@@ -645,16 +621,14 @@ export default function PlacementTable({
             <tbody>
               {groups.map((group) => (
                 <React.Fragment key={group.date}>
-                  {isMultiDay && (
-                    <tr className="bg-slate-100/80">
-                      <td colSpan={18} className="px-3 py-2 text-xs font-bold text-slate-600 border-b border-slate-200">
-                        {formatLocalDate(group.date)}
-                        <span className="ml-2 font-normal text-slate-400">
-                          {group.items.length} trip{group.items.length !== 1 ? "s" : ""}
-                        </span>
-                      </td>
-                    </tr>
-                  )}
+                  <tr className="bg-slate-100/80">
+                    <td colSpan={18} className="px-3 py-2 text-xs font-bold text-slate-600 border-b border-slate-200">
+                      {formatLocalDate(group.date)}
+                      <span className="ml-2 font-normal text-slate-400">
+                        {group.items.length} trip{group.items.length !== 1 ? "s" : ""}
+                      </span>
+                    </td>
+                  </tr>
                   {group.items.map((p, i) => (
                     <tr key={p.id} className={`border-b transition-colors ${ROW_BG[p.finalStatus] ?? "hover:bg-slate-50/70"}`}>
                       <td className="px-3 py-2.5 text-slate-400 text-xs">{i + 1}</td>
