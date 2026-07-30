@@ -141,7 +141,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (tirpal === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, ["MAINTENANCE_TEAM"]);
     if (stepney === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "STEPNEY", session.user.id, ["MAINTENANCE_TEAM"]);
     if (idfyDrivers === "REQUIRED_NOT_AVAILABLE") {
-      await raiseIssue(id, "EQUIPMENT", "IDFY_NOT_AVAILABLE", session.user.id, ["MAINTENANCE_TEAM"]);
+      await raiseIssue(id, "DRIVER", "IDFY_NOT_AVAILABLE", session.user.id, ["DRIVER_MANAGEMENT"]);
     }
 
     await logAudit({
@@ -232,6 +232,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       where: { id },
       data: { vehicleId: (vehicleId as string) || null },
     });
+
+    // Bug 8 fix: vehicle-specific issues are no longer relevant after a swap.
+    // Auto-resolve open MAINTENANCE and EQUIPMENT issues so teams aren't chasing problems on a vehicle that's gone.
+    if (current.vehicleId !== (vehicleId || null)) {
+      await prisma.issueAlert.updateMany({
+        where: {
+          placementId: id,
+          issueCategory: { in: ["MAINTENANCE", "EQUIPMENT"] },
+          status: { in: ["OPEN", "IN_PROGRESS"] },
+        },
+        data: {
+          status: "RESOLVED",
+          resolvedById: session.user.id,
+          resolvedAt: now,
+          resolutionNote: `Auto-resolved: vehicle swapped from ${current.vehicle?.vehicleNumber ?? "none"} to ${newVehicle?.vehicleNumber ?? "none"}`,
+        },
+      });
+    }
 
     await logAudit({
       userId: session.user.id,

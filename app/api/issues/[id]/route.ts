@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ISSUE_VALUE_LABELS } from "@/lib/constants";
 import { logAudit } from "@/lib/audit";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
@@ -11,7 +12,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { status, resolutionNote, eta } = await req.json();
   const issue = await prisma.issueAlert.findUnique({
     where: { id: params.id },
-    include: { placement: { include: { client: true } } },
+    include: { placement: { include: { client: true, route: true } } },
   });
   if (!issue) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -35,6 +36,24 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       resolvedAt: status === "RESOLVED" ? new Date() : null,
     },
   });
+
+  // Bug 5 fix: notify PLANNING_TEAM and ADMIN when an issue is resolved.
+  if (status === "RESOLVED") {
+    const notifyUsers = await prisma.user.findMany({
+      where: { role: { in: ["PLANNING_TEAM", "ADMIN"] } },
+      select: { id: true },
+    });
+    const label = ISSUE_VALUE_LABELS[issue.issueValue] ?? issue.issueValue;
+    await prisma.notification.createMany({
+      data: notifyUsers.map((u) => ({
+        userId: u.id,
+        placementId: issue.placementId,
+        type: "ISSUE_RESOLVED" as const,
+        message: `RESOLVED: ${issue.placement.client.name} | ${issue.placement.route.name} — ${label} has been resolved by ${session.user.name}.`,
+      })),
+      skipDuplicates: true,
+    });
+  }
 
   const etaStr = etaDate ? ` ETA: ${etaDate.toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}` : "";
   await logAudit({

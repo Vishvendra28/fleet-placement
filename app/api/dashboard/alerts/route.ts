@@ -18,8 +18,6 @@ export async function GET(req: NextRequest) {
     categoryFilter.issueCategory = { in: ["MAINTENANCE", "EQUIPMENT"] };
   } else if (role === "STORE_AND_TYRE") {
     categoryFilter.issueCategory = "EQUIPMENT";
-  } else if (role === "PLACEMENT_TEAM") {
-    categoryFilter.issueCategory = "EQUIPMENT";
   }
   // PLANNING_TEAM and ADMIN: no filter = all categories
 
