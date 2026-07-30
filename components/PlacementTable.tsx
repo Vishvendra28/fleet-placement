@@ -840,7 +840,7 @@ export default function PlacementTable({
                   disabled={deleting}
                   className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
                 >
-                  Cancel
+                  ← Back
                 </button>
                 <button
                   onClick={() => deleteTrip(deleteConfirmId)}
