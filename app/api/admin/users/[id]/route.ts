@@ -22,7 +22,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const user = await prisma.user.update({
     where: { id: params.id },
-    data: { name: name.trim(), role, email: normalizedEmail },
+    data: {
+      name: name.trim(),
+      role,
+      email: normalizedEmail,
+      // Bump tokenVersion so any existing JWT is invalidated within 5 minutes
+      ...(role !== existing.role ? { tokenVersion: { increment: 1 } } : {}),
+    },
     select: { id: true, name: true, email: true, role: true },
   });
 
@@ -48,7 +54,18 @@ export async function DELETE(_: NextRequest, { params }: { params: { id: string 
   const existing = await prisma.user.findUnique({ where: { id: params.id } });
   if (!existing) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
-  await prisma.user.delete({ where: { id: params.id } });
+  try {
+    await prisma.user.delete({ where: { id: params.id } });
+  } catch (err: unknown) {
+    const e = err as { code?: string };
+    if (e.code === "P2003") {
+      return NextResponse.json(
+        { error: "Cannot delete this user — they have linked records (issues, remarks, or audit logs). Consider changing their role to restrict access instead." },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
 
   await logAudit({
     userId: session.user.id,
