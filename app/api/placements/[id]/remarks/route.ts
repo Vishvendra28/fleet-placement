@@ -11,7 +11,8 @@ async function raiseIssue(
   category: IssueCategory,
   issueValue: string,
   raisedById: string,
-  notifyRoles: string[]
+  notifyRoles: string[],
+  notifyEmails: string[] = []
 ) {
   const existing = await prisma.issueAlert.findFirst({
     where: { placementId, issueCategory: category, issueValue, status: { in: ["OPEN", "IN_PROGRESS"] } },
@@ -28,14 +29,24 @@ async function raiseIssue(
   });
   if (!placement) return;
 
-  const recipients = await prisma.user.findMany({
-    where: { role: { in: notifyRoles as never[] } },
-    select: { id: true },
+  const roleRecipients = notifyRoles.length > 0
+    ? await prisma.user.findMany({ where: { role: { in: notifyRoles as never[] } }, select: { id: true } })
+    : [];
+  const emailRecipients = notifyEmails.length > 0
+    ? await prisma.user.findMany({ where: { email: { in: notifyEmails } }, select: { id: true } })
+    : [];
+
+  const seen = new Set<string>();
+  const allRecipients = [...roleRecipients, ...emailRecipients].filter((u) => {
+    if (seen.has(u.id)) return false;
+    seen.add(u.id);
+    return true;
   });
-  if (recipients.length) {
+
+  if (allRecipients.length) {
     const label = ISSUE_VALUE_LABELS[issueValue] || issueValue;
     await prisma.notification.createMany({
-      data: recipients.map((u) => ({
+      data: allRecipients.map((u) => ({
         userId: u.id,
         placementId,
         type: "ISSUE_ALERT" as const,
@@ -94,7 +105,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       await raiseIssue(id, "DRIVER", driverIssue as string, session.user.id, ["DRIVER_MANAGEMENT"]);
     }
     if (maintenanceIssue && maintenanceIssue !== "NO_ISSUE") {
-      await raiseIssue(id, "MAINTENANCE", maintenanceIssue as string, session.user.id, ["MAINTENANCE_TEAM"]);
+      if (maintenanceIssue === "TYRE_AND_ALIGNMENT") {
+        // Tyre & Alignment → Gaurav (Store & Tyre). EQUIPMENT category so Gaurav can see it in his issues list.
+        await raiseIssue(id, "EQUIPMENT", maintenanceIssue as string, session.user.id, ["STORE_AND_TYRE"]);
+      } else {
+        await raiseIssue(id, "MAINTENANCE", maintenanceIssue as string, session.user.id, ["MAINTENANCE_TEAM"]);
+      }
     }
 
     const remarkLabel = section === "d1" ? "D-1 Remark" : "Same Day Remark";
@@ -137,9 +153,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (elockStatus === "UNHEALTHY" || elockStatus === "LOCK_DAMAGE") {
       await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["MAINTENANCE_TEAM"]);
     }
-    if (cargoNet === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, ["MAINTENANCE_TEAM"]);
-    if (tirpal === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, ["MAINTENANCE_TEAM"]);
-    if (stepney === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "STEPNEY", session.user.id, ["MAINTENANCE_TEAM"]);
+    if (cargoNet === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, [], ["gaurav@fleet.com", "mohit@fleet.com", "shahid@fleet.com"]);
+    if (tirpal === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, [], ["gaurav@fleet.com", "mohit@fleet.com", "shahid@fleet.com"]);
+    if (stepney === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "STEPNEY", session.user.id, ["STORE_AND_TYRE"]);
     if (idfyDrivers === "REQUIRED_NOT_AVAILABLE") {
       await raiseIssue(id, "DRIVER", "IDFY_NOT_AVAILABLE", session.user.id, ["DRIVER_MANAGEMENT"]);
     }
