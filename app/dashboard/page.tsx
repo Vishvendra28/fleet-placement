@@ -9,7 +9,7 @@ import Link from "next/link";
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Admin", PLANNING_TEAM: "Planning Team", PLACEMENT_TEAM: "Placement Team",
   DRIVER_MANAGEMENT: "Driver Management", MAINTENANCE_TEAM: "Maintenance Team",
-  STORE_AND_TYRE: "Store & Tyre", KAM: "KAM",
+  STORE_AND_TYRE: "Store & Tyre", E_LOCK_TEAM: "E-Lock Team", KAM: "KAM",
 };
 
 export default async function DashboardPage({ searchParams }: { searchParams: { date?: string } }) {

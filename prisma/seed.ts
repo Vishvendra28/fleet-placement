@@ -30,6 +30,9 @@ async function main() {
   await prisma.user.upsert({ where: { email: "maninder@fleet.com" }, update: {}, create: { name: "Maninder", email: "maninder@fleet.com", passwordHash: hash("fleet123"), role: "DRIVER_MANAGEMENT" } });
   await prisma.user.upsert({ where: { email: "deepak@fleet.com" }, update: {}, create: { name: "Deepak", email: "deepak@fleet.com", passwordHash: hash("fleet123"), role: "MAINTENANCE_TEAM" } });
 
+  // E-Lock Team
+  await prisma.user.upsert({ where: { email: "rahul@fleet.in" }, update: {}, create: { name: "Rahul", email: "rahul@fleet.in", passwordHash: hash("fleet123"), role: "E_LOCK_TEAM" } });
+
   // Clients
   const clients = [
     { name: "Flipkart", kam: harish }, { name: "Gatik", kam: harish },
