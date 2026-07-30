@@ -45,7 +45,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
             <h1 className="text-xl font-bold text-slate-900">My Issues</h1>
             <p className="text-sm text-slate-500 mt-0.5">{ROLE_LABELS[userRole] ?? userRole}</p>
           </div>
-          <IssueDashboard userRole={userRole} initialDate={today} />
+          <IssueDashboard userRole={userRole} />
         </div>
       );
     }
