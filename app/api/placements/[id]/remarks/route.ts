@@ -182,6 +182,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
     if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+    const VALID_STATUSES: FinalStatus[] = ["PLACED", "PENDING", "NOT_PLACED"];
+    if (!VALID_STATUSES.includes(data.finalStatus as FinalStatus)) {
+      return NextResponse.json({ error: "Invalid status value." }, { status: 400 });
+    }
+
     if (data.finalStatus === "PLACED") {
       const openCount = await prisma.issueAlert.count({
         where: { placementId: id, status: { in: ["OPEN", "IN_PROGRESS"] } },
