@@ -94,7 +94,7 @@ export default async function D1PendingPage({ searchParams }: { searchParams: Se
   const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const grouped: Record<string, typeof filtered> = {};
   for (const p of filtered) {
-    const key = p.date.split("T")[0];
+    const key = new Date(p.date).toISOString().split("T")[0];
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(p);
   }
