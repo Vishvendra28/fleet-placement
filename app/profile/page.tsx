@@ -11,6 +11,7 @@ const ROLE_LABEL: Record<Role, string> = {
   DRIVER_MANAGEMENT: "Driver Management",
   MAINTENANCE_TEAM: "Maintenance Team",
   STORE_AND_TYRE: "Store & Tyre",
+  E_LOCK_TEAM: "E-Lock Team",
   KAM: "Key Account Manager",
 };
 
@@ -21,6 +22,7 @@ const ROLE_COLOR: Record<Role, string> = {
   DRIVER_MANAGEMENT: "bg-orange-100 text-orange-700 border-orange-200",
   MAINTENANCE_TEAM: "bg-pink-100 text-pink-700 border-pink-200",
   STORE_AND_TYRE: "bg-yellow-100 text-yellow-700 border-yellow-200",
+  E_LOCK_TEAM: "bg-cyan-100 text-cyan-700 border-cyan-200",
   KAM: "bg-red-100 text-red-700 border-red-200",
 };
 
@@ -37,6 +39,8 @@ const ROLE_DESCRIPTION: Record<Role, string> = {
     "Handles vehicle health and maintenance issues. Can view the dashboard, raise maintenance issues, and update vehicle status.",
   STORE_AND_TYRE:
     "Handles tyre, stepney, cargo net, and tirpal-related equipment issues. Can view the dashboard and manage assigned equipment issue alerts.",
+  E_LOCK_TEAM:
+    "Handles E-Lock equipment issues. Receives alerts when an E-Lock is marked unhealthy or damaged, and can mark those issues as in-progress or resolved.",
   KAM:
     "Key Account Manager. Can view the dashboard to monitor placement status for their assigned clients.",
 };
@@ -59,6 +63,7 @@ const ROLE_ACCESS: Record<Role, string[]> = {
   DRIVER_MANAGEMENT: ["Dashboard", "Issues", "Profile"],
   MAINTENANCE_TEAM: ["Dashboard", "Issues", "Profile"],
   STORE_AND_TYRE: ["Dashboard", "Issues", "Profile"],
+  E_LOCK_TEAM: ["Dashboard", "Issues", "Profile"],
   KAM: ["Dashboard", "Profile"],
 };
 
