@@ -14,14 +14,34 @@ async function raiseIssue(
   notifyRoles: string[],
   notifyEmails: string[] = []
 ) {
-  const existing = await prisma.issueAlert.findFirst({
-    where: { placementId, issueCategory: category, issueValue, status: { in: ["OPEN", "IN_PROGRESS"] } },
-  });
-  if (existing) return;
+  // Serializable transaction + @@unique([placementId, issueCategory, issueValue])
+  // eliminates the TOCTOU race: concurrent calls either hit the unique constraint
+  // (P2002) or the serialization conflict (P2034) — both are safe to ignore.
+  let issue: { id: string } | null = null;
+  try {
+    issue = await prisma.$transaction(async (tx) => {
+      const existing = await tx.issueAlert.findUnique({
+        where: { placementId_issueCategory_issueValue: { placementId, issueCategory: category, issueValue } },
+      });
+      if (existing) {
+        if (existing.status !== "RESOLVED") return null; // already active, skip
+        // Re-raise: reset a resolved issue back to OPEN
+        return tx.issueAlert.update({
+          where: { id: existing.id },
+          data: { status: "OPEN", raisedById, raisedAt: new Date(), resolvedById: null, resolvedAt: null, resolutionNote: null, eta: null },
+        });
+      }
+      return tx.issueAlert.create({
+        data: { placementId, issueCategory: category, issueValue, raisedById, status: "OPEN" },
+      });
+    }, { isolationLevel: "Serializable" });
+  } catch (err: unknown) {
+    const e = err as { code?: string };
+    if (e.code === "P2002" || e.code === "P2034") return; // race handled — already exists
+    throw err;
+  }
 
-  const issue = await prisma.issueAlert.create({
-    data: { placementId, issueCategory: category, issueValue, raisedById, status: "OPEN" },
-  });
+  if (!issue) return; // was already OPEN/IN_PROGRESS
 
   const placement = await prisma.placement.findUnique({
     where: { id: placementId },

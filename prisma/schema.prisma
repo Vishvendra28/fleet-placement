@@ -281,7 +281,7 @@ model IssueAlert {
   resolvedBy User?          @relation("ResolvedIssues", fields: [resolvedById], references: [id])
   comments   IssueComment[]
 
-  @@index([placementId])
+  @@unique([placementId, issueCategory, issueValue])
   @@index([status])
   @@index([raisedById])
 }

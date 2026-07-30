@@ -4,6 +4,22 @@ import { compare } from "bcryptjs";
 import { prisma } from "./prisma";
 import { Role } from "@prisma/client";
 
+// Simple in-memory rate limiter: 10 attempts per email per 15 minutes.
+// Resets on server restart — acceptable for single-instance (Render free tier).
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+function checkRateLimit(email: string): boolean {
+  const key = email.toLowerCase();
+  const now = Date.now();
+  const record = loginAttempts.get(key);
+  if (!record || record.resetAt < now) {
+    loginAttempts.set(key, { count: 1, resetAt: now + 15 * 60 * 1000 });
+    return true;
+  }
+  if (record.count >= 10) return false;
+  record.count++;
+  return true;
+}
+
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt", maxAge: 8 * 60 * 60 }, // 8 hours
   providers: [
@@ -16,6 +32,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           if (!credentials?.email || !credentials?.password) return null;
+          if (!checkRateLimit(credentials.email)) return null;
           const user = await prisma.user.findUnique({ where: { email: credentials.email } });
           if (!user) return null;
           const valid = await compare(credentials.password, user.passwordHash);
