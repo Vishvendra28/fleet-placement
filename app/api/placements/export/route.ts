@@ -9,7 +9,7 @@ import {
 
 function esc(v: string | null | undefined): string {
   if (!v) return "";
-  const s = String(v);
+  const s = /^[=+\-@]/.test(String(v)) ? `'${String(v)}` : String(v);
   return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
 
   const dateStr = req.nextUrl.searchParams.get("date") ?? new Date().toISOString().split("T")[0];
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return NextResponse.json({ error: "Invalid date." }, { status: 400 });
   const nextDay = new Date(date.getTime() + 86400000);
 
   const placements = await prisma.placement.findMany({

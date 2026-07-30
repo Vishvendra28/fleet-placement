@@ -3,9 +3,12 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
+const ALLOWED_ROLES = ["PLANNING_TEAM", "PLACEMENT_TEAM", "ADMIN"];
+
 export default async function SameDayPendingLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
+  if (!ALLOWED_ROLES.includes(session.user.role)) redirect("/dashboard");
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar user={session.user} />

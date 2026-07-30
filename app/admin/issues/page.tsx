@@ -18,9 +18,11 @@ export default async function AdminIssuesPage({
 }: {
   searchParams: { status?: string; category?: string };
 }) {
+  const VALID_STATUSES = ["OPEN", "IN_PROGRESS", "RESOLVED"];
+  const VALID_CATEGORIES = ["DRIVER", "MAINTENANCE", "EQUIPMENT"];
   const where: Record<string, unknown> = {};
-  if (searchParams.status && searchParams.status !== "ALL") where.status = searchParams.status;
-  if (searchParams.category && searchParams.category !== "ALL") where.issueCategory = searchParams.category;
+  if (searchParams.status && VALID_STATUSES.includes(searchParams.status)) where.status = searchParams.status;
+  if (searchParams.category && VALID_CATEGORIES.includes(searchParams.category)) where.issueCategory = searchParams.category;
 
   const issues = await prisma.issueAlert.findMany({
     where,

@@ -5,6 +5,12 @@ import PlacementTable from "@/components/PlacementTable";
 import DashboardAlerts from "@/components/DashboardAlerts";
 import Link from "next/link";
 
+const ROLE_LABELS: Record<string, string> = {
+  ADMIN: "Admin", PLANNING_TEAM: "Planning Team", PLACEMENT_TEAM: "Placement Team",
+  DRIVER_MANAGEMENT: "Driver Management", MAINTENANCE_TEAM: "Maintenance Team",
+  STORE_AND_TYRE: "Store & Tyre", KAM: "KAM",
+};
+
 export default async function DashboardPage({ searchParams }: { searchParams: { date?: string } }) {
   const session = await getServerSession(authOptions);
   const today = new Date().toISOString().split("T")[0];
@@ -43,7 +49,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
       <div>
         <div className="mb-6">
           <h1 className="text-xl font-bold text-slate-900">Daily Placements</h1>
-          <p className="text-sm text-slate-500 mt-0.5">{session?.user.role.replace(/_/g, " ")}</p>
+          <p className="text-sm text-slate-500 mt-0.5">{ROLE_LABELS[session?.user.role ?? ""] ?? session?.user.role}</p>
         </div>
         <DashboardAlerts userRole={session!.user.role} />
         <div className="mt-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">

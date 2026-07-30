@@ -71,8 +71,22 @@ export async function GET(req: NextRequest) {
     });
     if (!teamMembers.length) continue;
 
+    // Only notify for placements that haven't already received a CUTOFF_ALERT from this team.
+    const alreadyNotified = await prisma.notification.findMany({
+      where: {
+        type: "CUTOFF_ALERT",
+        placementId: { in: violations.map((p) => p.id) },
+        userId: { in: teamMembers.map((u) => u.id) },
+      },
+      select: { placementId: true },
+    });
+    const notifiedIds = new Set(alreadyNotified.map((n) => n.placementId));
+    const newViolations = violations.filter((p) => !notifiedIds.has(p.id));
+
+    if (!newViolations.length) continue;
+
     await prisma.notification.createMany({
-      data: violations.flatMap((p) =>
+      data: newViolations.flatMap((p) =>
         teamMembers.map((u) => ({
           userId: u.id,
           placementId: p.id,
@@ -82,7 +96,7 @@ export async function GET(req: NextRequest) {
       ),
       skipDuplicates: true,
     });
-    cutoffCount += violations.length;
+    cutoffCount += newViolations.length;
   }
 
   // ── 3. ETA_OVERDUE: IN_PROGRESS issues whose committed ETA has passed ──
