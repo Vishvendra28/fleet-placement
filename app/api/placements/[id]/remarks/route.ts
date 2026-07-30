@@ -173,7 +173,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       });
 
       if (elockStatus === "UNHEALTHY" || elockStatus === "LOCK_DAMAGE") {
-        await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["MAINTENANCE_TEAM"]);
+        await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["MAINTENANCE_TEAM", "E_LOCK_TEAM"]);
       }
       if (cargoNet === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, [], ["gaurav@fleet.com", "mohit@fleet.com", "shahid@fleet.com"]);
       if (tirpal === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, [], ["gaurav@fleet.com", "mohit@fleet.com", "shahid@fleet.com"]);

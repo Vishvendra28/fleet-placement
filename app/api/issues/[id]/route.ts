@@ -22,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (role !== "ADMIN") {
       if (issue.issueCategory === "DRIVER" && role !== "DRIVER_MANAGEMENT")
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      if ((issue.issueCategory === "MAINTENANCE" || issue.issueCategory === "EQUIPMENT") && role !== "MAINTENANCE_TEAM" && role !== "STORE_AND_TYRE")
+      if ((issue.issueCategory === "MAINTENANCE" || issue.issueCategory === "EQUIPMENT") && role !== "MAINTENANCE_TEAM" && role !== "STORE_AND_TYRE" && role !== "E_LOCK_TEAM")
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
