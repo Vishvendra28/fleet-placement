@@ -17,8 +17,8 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   const today = new Date().toISOString().split("T")[0];
   const exportDate = searchParams.date ?? today;
 
-  const threeDaysAgo = new Date(Date.now() - 2 * 86400000);
-  threeDaysAgo.setUTCHours(0, 0, 0, 0);
+  const weekAgo = new Date(Date.now() - 6 * 86400000);
+  weekAgo.setUTCHours(0, 0, 0, 0);
   const tomorrow = new Date();
   tomorrow.setUTCHours(0, 0, 0, 0);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -36,7 +36,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   };
 
   if (session?.user.role !== "ADMIN") {
-    const nonAdminWhere: Record<string, unknown> = { date: { gte: threeDaysAgo, lt: tomorrow } };
+    const nonAdminWhere: Record<string, unknown> = { date: { gte: weekAgo, lt: tomorrow } };
     if (session!.user.role === "KAM") nonAdminWhere.client = { kamId: session!.user.id };
 
     const rawPlacements = await prisma.placement.findMany({
@@ -70,7 +70,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         </div>
         <DashboardAlerts userRole={session!.user.role} />
         <div className="mt-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-          <PlacementTable userRole={session!.user.role} initialDate={today} initialPlacements={placements} />
+          <PlacementTable userRole={session!.user.role} initialPlacements={placements} />
         </div>
       </div>
     );
@@ -79,7 +79,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   const [activeIssuesCount, rawPlacements] = await Promise.all([
     prisma.issueAlert.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }),
     prisma.placement.findMany({
-      where: { date: { gte: threeDaysAgo, lt: tomorrow } },
+      where: { date: { gte: weekAgo, lt: tomorrow } },
       select: placementSelect,
       orderBy: [{ date: "asc" }, { placementTime: "asc" }],
     }),
@@ -134,7 +134,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
         <div className="p-5">
           <PlacementTable
             userRole="ADMIN"
-            initialDate={today}
             activeIssuesCount={activeIssuesCount}
             initialPlacements={placements}
           />
