@@ -442,11 +442,9 @@ export default function PlacementTable({
           <div className="md:hidden space-y-3">
             {groups.map((group) => (
               <React.Fragment key={group.date}>
-                <div className="px-1 pb-2 pt-1 text-xs font-bold text-slate-700">
-                  {formatLocalDate(group.date)}
-                  <span className="ml-2 font-normal text-slate-400">
-                    {group.items.length} trip{group.items.length !== 1 ? "s" : ""}
-                  </span>
+                <div className="px-1 pb-2 pt-1 flex items-baseline gap-2">
+                  <span className="text-sm font-semibold text-slate-800">{formatLocalDate(group.date)}</span>
+                  <span className="text-xs font-normal text-slate-400">{group.items.length} trip{group.items.length !== 1 ? "s" : ""}</span>
                 </div>
                 {group.items.map((p, i) => {
                   const hasOpen = p.issueAlerts.some((a) => a.status === "OPEN" || a.status === "IN_PROGRESS");
@@ -588,48 +586,45 @@ export default function PlacementTable({
           </div>
 
           {/* ── Desktop table view ── */}
-          <div className="hidden md:block overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <th className="px-3 py-3 text-left border-b border-slate-200">#</th>
-                <th className="px-3 py-3 text-left border-b border-slate-200">Client</th>
-                <th className="px-3 py-3 text-left border-b border-slate-200">Route</th>
-                <th className="px-3 py-3 text-left border-b border-slate-200">Schedule</th>
-                <th className="px-3 py-3 text-left border-b border-slate-200">Lane</th>
-                <th className="px-3 py-3 text-left border-b border-slate-200">Vehicle</th>
-                <th className="px-3 py-3 text-left border-b border-slate-200">Driver</th>
-                <th className="px-3 py-3 text-left border-b border-slate-200">Time</th>
-                <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-blue-50/60 text-blue-600">D-1 Planning</th>
-                <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-indigo-50/60 text-indigo-600">Same Day</th>
-                <th colSpan={5} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-emerald-50/60 text-emerald-600">Placement Check</th>
-                <th className="px-3 py-3 text-center border-b border-l border-slate-200">Status</th>
-              </tr>
-              <tr className="bg-slate-50 text-xs text-slate-500">
-                <th colSpan={8} className="border-b border-slate-200" />
-                <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-blue-50/40">Driver</th>
-                <th className="px-2 py-2 border-b border-slate-200 font-medium bg-blue-50/40">Maint.</th>
-                <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-indigo-50/40">Driver</th>
-                <th className="px-2 py-2 border-b border-slate-200 font-medium bg-indigo-50/40">Maint.</th>
-                <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-emerald-50/40">E-Lock</th>
-                <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">IDFY</th>
-                <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Cargo Net</th>
-                <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Tirpal</th>
-                <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Stepney</th>
-                <th className="border-b border-l border-slate-200" />
-              </tr>
-            </thead>
-            <tbody>
-              {groups.map((group) => (
-                <React.Fragment key={group.date}>
-                  <tr className="bg-slate-100/80">
-                    <td colSpan={18} className="px-3 py-2 text-xs font-bold text-slate-600 border-b border-slate-200">
-                      {formatLocalDate(group.date)}
-                      <span className="ml-2 font-normal text-slate-400">
-                        {group.items.length} trip{group.items.length !== 1 ? "s" : ""}
-                      </span>
-                    </td>
-                  </tr>
+          <div className="hidden md:block space-y-5">
+            {groups.map((group) => (
+              <div key={group.date}>
+                <div className="mb-2.5 px-1 flex items-baseline gap-2">
+                  <h3 className="text-base font-semibold text-slate-800">{formatLocalDate(group.date)}</h3>
+                  <span className="text-sm text-slate-400">{group.items.length} trip{group.items.length !== 1 ? "s" : ""}</span>
+                </div>
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                      <th className="px-3 py-3 text-left border-b border-slate-200">#</th>
+                      <th className="px-3 py-3 text-left border-b border-slate-200">Client</th>
+                      <th className="px-3 py-3 text-left border-b border-slate-200">Route</th>
+                      <th className="px-3 py-3 text-left border-b border-slate-200">Schedule</th>
+                      <th className="px-3 py-3 text-left border-b border-slate-200">Lane</th>
+                      <th className="px-3 py-3 text-left border-b border-slate-200">Vehicle</th>
+                      <th className="px-3 py-3 text-left border-b border-slate-200">Driver</th>
+                      <th className="px-3 py-3 text-left border-b border-slate-200">Time</th>
+                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-blue-50/60 text-blue-600">D-1 Planning</th>
+                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-indigo-50/60 text-indigo-600">Same Day</th>
+                      <th colSpan={5} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-emerald-50/60 text-emerald-600">Placement Check</th>
+                      <th className="px-3 py-3 text-center border-b border-l border-slate-200">Status</th>
+                    </tr>
+                    <tr className="bg-slate-50 text-xs text-slate-500">
+                      <th colSpan={8} className="border-b border-slate-200" />
+                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-blue-50/40">Driver</th>
+                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-blue-50/40">Maint.</th>
+                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-indigo-50/40">Driver</th>
+                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-indigo-50/40">Maint.</th>
+                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-emerald-50/40">E-Lock</th>
+                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">IDFY</th>
+                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Cargo Net</th>
+                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Tirpal</th>
+                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Stepney</th>
+                      <th className="border-b border-l border-slate-200" />
+                    </tr>
+                  </thead>
+                  <tbody>
                   {group.items.map((p, i) => (
                     <tr key={p.id} className={`border-b transition-colors ${ROW_BG[p.finalStatus] ?? "hover:bg-slate-50/70"}`}>
                       <td className="px-3 py-2.5 text-slate-400 text-xs">{i + 1}</td>
@@ -778,10 +773,11 @@ export default function PlacementTable({
                       </td>
                     </tr>
                   ))}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
+                  </tbody>
+                </table>
+                </div>
+              </div>
+            ))}
           </div>
         </>
       )}
