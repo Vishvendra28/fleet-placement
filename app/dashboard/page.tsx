@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import PlacementTable from "@/components/PlacementTable";
+import IssueDashboard from "@/components/IssueDashboard";
 import DashboardAlerts from "@/components/DashboardAlerts";
 import BackButton from "@/components/BackButton";
 import Link from "next/link";
@@ -36,6 +37,19 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   };
 
   if (session?.user.role !== "ADMIN") {
+    const userRole = session!.user.role;
+    if (["DRIVER_MANAGEMENT", "MAINTENANCE_TEAM", "STORE_AND_TYRE", "E_LOCK_TEAM"].includes(userRole)) {
+      return (
+        <div>
+          <div className="mb-6">
+            <h1 className="text-xl font-bold text-slate-900">My Issues</h1>
+            <p className="text-sm text-slate-500 mt-0.5">{ROLE_LABELS[userRole] ?? userRole}</p>
+          </div>
+          <IssueDashboard userRole={userRole} initialDate={today} />
+        </div>
+      );
+    }
+
     const nonAdminWhere: Record<string, unknown> = { date: { gte: weekAgo, lt: rangeEnd } };
     if (session!.user.role === "KAM") nonAdminWhere.client = { kamId: session!.user.id };
 
