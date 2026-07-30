@@ -48,12 +48,25 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
     return (
       <div>
-        <div className="mb-6 flex items-center gap-3">
-          <BackButton />
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">Daily Placements</h1>
-            <p className="text-sm text-slate-500 mt-0.5">{ROLE_LABELS[session?.user.role ?? ""] ?? session?.user.role}</p>
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <BackButton />
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">Daily Placements</h1>
+              <p className="text-sm text-slate-500 mt-0.5">{ROLE_LABELS[session?.user.role ?? ""] ?? session?.user.role}</p>
+            </div>
           </div>
+          {session?.user.role === "PLANNING_TEAM" && (
+            <Link
+              href="/placements/new"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 active:scale-95 transition-all shadow-sm shadow-blue-200"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              New Trip
+            </Link>
+          )}
         </div>
         <DashboardAlerts userRole={session!.user.role} />
         <div className="mt-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
@@ -86,7 +99,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
           </div>
         </div>
         <Link
-          href="/admin/placements/new"
+          href="/placements/new"
           className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 active:scale-95 transition-all shadow-sm shadow-blue-200"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

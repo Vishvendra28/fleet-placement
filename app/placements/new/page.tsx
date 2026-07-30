@@ -1,8 +1,15 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import NewPlacementForm from "@/components/NewPlacementForm";
 import BackButton from "@/components/BackButton";
 
 export default async function NewPlacementPage() {
+  const session = await getServerSession(authOptions);
+  if (!session) redirect("/login");
+  if (session.user.role !== "ADMIN" && session.user.role !== "PLANNING_TEAM") redirect("/dashboard");
+
   const [clients, vehicles] = await Promise.all([
     prisma.client.findMany({ orderBy: { name: "asc" } }),
     prisma.vehicle.findMany({ where: { isActive: true }, orderBy: { vehicleNumber: "asc" } }),
