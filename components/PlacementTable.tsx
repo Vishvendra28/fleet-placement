@@ -139,7 +139,7 @@ export default function PlacementTable({
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [placements, setPlacements] = useState<Placement[]>(initialPlacements ?? []);
-  const [loading, setLoading] = useState(!initialPlacements);
+  const [loading, setLoading] = useState(!(initialPlacements?.length));
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
@@ -149,7 +149,6 @@ export default function PlacementTable({
   const [statusError, setStatusError] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const skipFirstFetch = useRef(!!initialPlacements);
 
   const fetchPlacements = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -159,41 +158,43 @@ export default function PlacementTable({
     const url = `/api/placements?from=${rangeFrom(days)}&to=${today}`;
 
     const res = await fetch(url);
-    if (!res.ok) { if (!silent) setLoading(false); return; }
+    if (!res.ok) { setLoading(false); return; }
     const data: Placement[] = await res.json();
 
-    if (data.length === 0 && !silent) {
-      const latestRes = await fetch("/api/placements/latest-date");
-      if (latestRes.ok) {
-        const { date } = await latestRes.json();
-        if (date) {
-          const fallbackRes = await fetch(`/api/placements?date=${date}`);
-          if (fallbackRes.ok) {
-            const fallbackData: Placement[] = await fallbackRes.json();
-            if (fallbackData.length > 0) {
-              setPlacements(fallbackData);
-              setFallbackNotice(date);
-              if (!silent) setLoading(false);
-              return;
+    if (data.length === 0) {
+      if (!silent) {
+        const latestRes = await fetch("/api/placements/latest-date");
+        if (latestRes.ok) {
+          const { date } = await latestRes.json();
+          if (date) {
+            const fallbackRes = await fetch(`/api/placements?date=${date}`);
+            if (fallbackRes.ok) {
+              const fallbackData: Placement[] = await fallbackRes.json();
+              if (fallbackData.length > 0) {
+                setPlacements(fallbackData);
+                setFallbackNotice(date);
+                setLoading(false);
+                return;
+              }
             }
           }
         }
+        setFallbackNotice(null);
+        setPlacements([]);
       }
-      setFallbackNotice(null);
-      setPlacements([]);
+      // silent + empty: keep existing placements, don't wipe what's showing
     } else {
       setFallbackNotice(null);
       setPlacements(data);
     }
-    if (!silent) setLoading(false);
+    setLoading(false);
   }, [viewMode]);
 
   useEffect(() => {
-    if (skipFirstFetch.current) {
-      skipFirstFetch.current = false;
-      return;
-    }
-    fetchPlacements();
+    // Always fetch on mount and viewMode change.
+    // Silent if we already have data (no spinner flash); non-silent (shows spinner) if starting empty.
+    fetchPlacements(placements.length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchPlacements]);
 
   useEffect(() => {
