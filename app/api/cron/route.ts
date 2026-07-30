@@ -3,8 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { ISSUE_VALUE_LABELS } from "@/lib/constants";
 
 export async function GET(req: NextRequest) {
-  const secret = req.headers.get("authorization")?.replace("Bearer ", "") ?? req.nextUrl.searchParams.get("secret");
-  if (secret !== process.env.CRON_SECRET) {
+  const cronSecret = (process.env.CRON_SECRET ?? "").trim();
+  const urlSecret = new URL(req.url).searchParams.get("secret")?.trim() ?? "";
+  const headerSecret = (req.headers.get("authorization") ?? "").replace("Bearer ", "").trim();
+  const secret = headerSecret || urlSecret;
+  if (!cronSecret || secret !== cronSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
