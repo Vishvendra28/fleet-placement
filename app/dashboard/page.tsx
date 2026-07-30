@@ -19,9 +19,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
   const weekAgo = new Date(Date.now() - 6 * 86400000);
   weekAgo.setUTCHours(0, 0, 0, 0);
-  const tomorrow = new Date();
-  tomorrow.setUTCHours(0, 0, 0, 0);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const rangeEnd = new Date();
+  rangeEnd.setUTCHours(0, 0, 0, 0);
+  rangeEnd.setDate(rangeEnd.getDate() + 2); // include tomorrow's planned trips
 
   const placementSelect = {
     id: true, date: true, cohort: true, laneType: true, placementTime: true,
@@ -36,7 +36,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   };
 
   if (session?.user.role !== "ADMIN") {
-    const nonAdminWhere: Record<string, unknown> = { date: { gte: weekAgo, lt: tomorrow } };
+    const nonAdminWhere: Record<string, unknown> = { date: { gte: weekAgo, lt: rangeEnd } };
     if (session!.user.role === "KAM") nonAdminWhere.client = { kamId: session!.user.id };
 
     const rawPlacements = await prisma.placement.findMany({
@@ -79,7 +79,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   const [activeIssuesCount, rawPlacements] = await Promise.all([
     prisma.issueAlert.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }),
     prisma.placement.findMany({
-      where: { date: { gte: weekAgo, lt: tomorrow } },
+      where: { date: { gte: weekAgo, lt: rangeEnd } },
       select: placementSelect,
       orderBy: [{ date: "asc" }, { placementTime: "asc" }],
     }),

@@ -123,6 +123,10 @@ function todayStr() {
   return new Date().toISOString().split("T")[0];
 }
 
+function tomorrowStr() {
+  return new Date(Date.now() + 86400000).toISOString().split("T")[0];
+}
+
 function rangeFrom(days: number) {
   return new Date(Date.now() - days * 86400000).toISOString().split("T")[0];
 }
@@ -143,6 +147,7 @@ export default function PlacementTable({
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
+  const [dateFilter, setDateFilter] = useState("");
   const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
   const [swappingId, setSwappingId] = useState<string | null>(null);
   const [swapVehicles, setSwapVehicles] = useState<VehicleOption[]>([]);
@@ -153,9 +158,8 @@ export default function PlacementTable({
   const fetchPlacements = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
 
-    const today = todayStr();
     const days = viewMode === "week" ? 6 : 29;
-    const url = `/api/placements?from=${rangeFrom(days)}&to=${today}`;
+    const url = `/api/placements?from=${rangeFrom(days)}&to=${tomorrowStr()}`;
 
     const res = await fetch(url);
     if (!res.ok) { setLoading(false); return; }
@@ -293,7 +297,8 @@ export default function PlacementTable({
   const displayed = placements
     .filter((p) => !statusFilter || p.finalStatus === statusFilter)
     .filter((p) => !vehicleSearch || (p.vehicle?.vehicleNumber ?? "").toLowerCase().includes(vehicleSearch.toLowerCase()))
-    .filter((p) => !routeFilter || p.route.name === routeFilter);
+    .filter((p) => !routeFilter || p.route.name === routeFilter)
+    .filter((p) => !dateFilter || p.date.split("T")[0] === dateFilter);
 
   const groups = useMemo(() => {
     const byDate: Record<string, Placement[]> = {};
@@ -317,11 +322,12 @@ export default function PlacementTable({
   function changeMode(m: ViewMode) {
     setViewMode(m);
     setStatusFilter(null);
+    setDateFilter("");
     setFallbackNotice(null);
   }
 
   const tableCards = isAdmin ? [PLACED_CARD, PENDING_CARD] : [PLACED_CARD, PENDING_CARD, NOT_PLACED_CARD];
-  const hasActiveFilters = !!(statusFilter || vehicleSearch || routeFilter);
+  const hasActiveFilters = !!(statusFilter || vehicleSearch || routeFilter || dateFilter);
 
   return (
     <div>
@@ -368,9 +374,21 @@ export default function PlacementTable({
           </select>
         )}
 
+        <div className="relative">
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+          />
+          <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+
         {hasActiveFilters && (
           <button
-            onClick={() => { setStatusFilter(null); setVehicleSearch(""); setRouteFilter(""); }}
+            onClick={() => { setStatusFilter(null); setVehicleSearch(""); setRouteFilter(""); setDateFilter(""); }}
             className="text-xs text-slate-400 hover:text-slate-600 underline transition-colors"
           >
             Clear filters
