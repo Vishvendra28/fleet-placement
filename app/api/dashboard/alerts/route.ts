@@ -18,8 +18,11 @@ export async function GET(req: NextRequest) {
       categoryFilter.issueCategory = "DRIVER";
     } else if (role === "MAINTENANCE_TEAM") {
       categoryFilter.issueCategory = { in: ["MAINTENANCE", "EQUIPMENT"] };
-    } else if (role === "STORE_AND_TYRE" || role === "E_LOCK_TEAM") {
+    } else if (role === "STORE_AND_TYRE") {
       categoryFilter.issueCategory = "EQUIPMENT";
+    } else if (role === "E_LOCK_TEAM") {
+      categoryFilter.issueCategory = "EQUIPMENT";
+      categoryFilter.issueValue = { in: ["UNHEALTHY", "LOCK_DAMAGE"] };
     }
     // PLANNING_TEAM and ADMIN: no filter = all categories
 
