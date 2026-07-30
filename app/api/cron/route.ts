@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const headerSecret = (req.headers.get("authorization") ?? "").replace("Bearer ", "").trim();
   const secret = headerSecret || urlSecret;
   if (!cronSecret || secret !== cronSecret) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized", debug: { secretLength: cronSecret.length, receivedLength: secret.length } }, { status: 401 });
   }
 
   const now = new Date();
