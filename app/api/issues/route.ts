@@ -23,6 +23,9 @@ export async function GET(req: NextRequest) {
       where.issueCategory = { in: ["MAINTENANCE", "EQUIPMENT"] };
     } else if (role === "STORE_AND_TYRE") {
       where.issueCategory = "EQUIPMENT";
+    } else if (role === "E_LOCK_TEAM") {
+      where.issueCategory = "EQUIPMENT";
+      where.issueValue = { in: ["UNHEALTHY", "LOCK_DAMAGE"] };
     } else if (role !== "ADMIN" && role !== "PLANNING_TEAM" && role !== "PLACEMENT_TEAM") {
       return NextResponse.json([]);
     }
