@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Role } from "@prisma/client";
 
 type User = { id: string; name: string; email: string; role: Role };
-type Notif = { id: string; message: string; read: boolean; createdAt: string };
+type Notif = { id: string; message: string; read: boolean; createdAt: string; placementId: string | null };
 
 const ROLE_LABEL: Record<Role, string> = {
   ADMIN: "Admin", PLANNING_TEAM: "Planning", PLACEMENT_TEAM: "Placement",
@@ -98,10 +98,15 @@ export default function Navbar({ user }: { user: User }) {
                 {notifs.length === 0
                   ? <p className="text-sm text-gray-400 text-center py-8">No notifications</p>
                   : notifs.map((n) => (
-                    <div key={n.id} className={`px-4 py-3 ${!n.read ? "bg-blue-50" : ""}`}>
+                    <Link
+                      key={n.id}
+                      href="/issues"
+                      onClick={() => setOpen(false)}
+                      className={`block px-4 py-3 hover:bg-gray-50 transition-colors ${!n.read ? "bg-blue-50 hover:bg-blue-100" : ""}`}
+                    >
                       <p className={`text-sm ${!n.read ? "font-semibold text-gray-900" : "text-gray-600"}`}>{n.message}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{new Date(n.createdAt).toLocaleString("en-IN")}</p>
-                    </div>
+                    </Link>
                   ))
                 }
               </div>
