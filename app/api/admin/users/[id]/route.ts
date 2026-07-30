@@ -8,15 +8,21 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { name, role } = await req.json();
-  if (!name?.trim() || !role) return NextResponse.json({ error: "Name and role are required." }, { status: 400 });
+  const { name, role, email } = await req.json();
+  if (!name?.trim() || !role || !email?.trim()) return NextResponse.json({ error: "Name, email and role are required." }, { status: 400 });
 
   const existing = await prisma.user.findUnique({ where: { id: params.id } });
   if (!existing) return NextResponse.json({ error: "Not found." }, { status: 404 });
 
+  const normalizedEmail = email.trim().toLowerCase();
+  if (normalizedEmail !== existing.email) {
+    const taken = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (taken) return NextResponse.json({ error: "This email is already in use by another account." }, { status: 409 });
+  }
+
   const user = await prisma.user.update({
     where: { id: params.id },
-    data: { name: name.trim(), role },
+    data: { name: name.trim(), role, email: normalizedEmail },
     select: { id: true, name: true, email: true, role: true },
   });
 
@@ -25,9 +31,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     action: "UPDATED",
     entity: "USER",
     entityId: params.id,
-    description: `${session.user.name} updated user ${existing.name}: name ${existing.name}→${name.trim()}, role ${existing.role}→${role}`,
-    oldValue: { name: existing.name, role: existing.role },
-    newValue: { name: name.trim(), role },
+    description: `${session.user.name} updated user ${existing.name}`,
+    oldValue: { name: existing.name, email: existing.email, role: existing.role },
+    newValue: { name: name.trim(), email: normalizedEmail, role },
   });
 
   return NextResponse.json(user);
