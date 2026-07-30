@@ -31,6 +31,7 @@ type UrgentPlacement = {
 const ROLE_TITLE: Partial<Record<Role, string>> = {
   DRIVER_MANAGEMENT: "Driver Issues Needing Attention",
   MAINTENANCE_TEAM: "Maintenance & Equipment Issues",
+  STORE_AND_TYRE: "Store & Tyre Issues Needing Attention",
   PLACEMENT_TEAM: "Equipment Issues Needing Attention",
   PLANNING_TEAM: "Open Issues",
   ADMIN: "Active Issues",

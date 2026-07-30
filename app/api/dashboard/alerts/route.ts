@@ -16,6 +16,8 @@ export async function GET(req: NextRequest) {
     categoryFilter.issueCategory = "DRIVER";
   } else if (role === "MAINTENANCE_TEAM") {
     categoryFilter.issueCategory = { in: ["MAINTENANCE", "EQUIPMENT"] };
+  } else if (role === "STORE_AND_TYRE") {
+    categoryFilter.issueCategory = "EQUIPMENT";
   } else if (role === "PLACEMENT_TEAM") {
     categoryFilter.issueCategory = "EQUIPMENT";
   }
