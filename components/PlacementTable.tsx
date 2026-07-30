@@ -112,6 +112,18 @@ const PLACED_CARD = { label: "Placed", value: "PLACED", base: "border-emerald-20
 const PENDING_CARD = { label: "Pending", value: "PENDING", base: "border-amber-200 bg-gradient-to-br from-amber-50 to-white text-amber-700", ring: "ring-2 ring-amber-400 ring-offset-1", Icon: ClockIcon };
 const NOT_PLACED_CARD = { label: "Not Placed", value: "NOT_PLACED", base: "border-red-200 bg-gradient-to-br from-red-50 to-white text-red-700", ring: "ring-2 ring-red-400 ring-offset-1", Icon: XIcon };
 
+function formatShortDate(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
+function d1ShortDate(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() - 1);
+  return dt.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+}
+
 function formatLocalDate(dateStr: string) {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("en-IN", {
@@ -560,12 +572,18 @@ export default function PlacementTable({
                       {/* Remarks */}
                       <div className="px-4 py-3 space-y-2 bg-white/50">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide w-14 flex-shrink-0">D-1</span>
+                          <div className="flex-shrink-0 w-14">
+                            <div className="text-[10px] font-bold text-blue-600 leading-tight">{d1ShortDate(p.date.split("T")[0])}</div>
+                            <div className="text-[9px] text-blue-400 leading-tight">(D-1)</div>
+                          </div>
                           <Dropdown value={p.d1Remark?.driverIssue} options={DRIVER_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "d1", "driverIssue", v)} />
                           <Dropdown value={p.d1Remark?.maintenanceIssue} options={MAINTENANCE_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "d1", "maintenanceIssue", v)} />
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide w-14 flex-shrink-0">Same Day</span>
+                          <div className="flex-shrink-0 w-14">
+                            <div className="text-[10px] font-bold text-indigo-600 leading-tight">{formatShortDate(p.date.split("T")[0])}</div>
+                            <div className="text-[9px] text-indigo-400 leading-tight">(Same Day)</div>
+                          </div>
                           <Dropdown value={p.sameDayRemark?.driverIssue} options={DRIVER_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "sameDay", "driverIssue", v)} />
                           <Dropdown value={p.sameDayRemark?.maintenanceIssue} options={MAINTENANCE_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "sameDay", "maintenanceIssue", v)} />
                         </div>
@@ -623,17 +641,23 @@ export default function PlacementTable({
                       <th className="px-3 py-3 text-left border-b border-slate-200">Vehicle</th>
                       <th className="px-3 py-3 text-left border-b border-slate-200">Driver</th>
                       <th className="px-3 py-3 text-left border-b border-slate-200">Time</th>
-                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-blue-50/60 text-blue-600">D-1 Planning</th>
-                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-indigo-50/60 text-indigo-600">Same Day</th>
+                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-blue-50/60 text-blue-600">
+                        <div className="font-bold leading-tight">{d1ShortDate(group.date)}</div>
+                        <div className="text-[10px] font-normal opacity-70">(D-1 Planning)</div>
+                      </th>
+                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-indigo-50/60 text-indigo-600">
+                        <div className="font-bold leading-tight">{formatShortDate(group.date)}</div>
+                        <div className="text-[10px] font-normal opacity-70">(Same Day Planning)</div>
+                      </th>
                       <th colSpan={5} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-emerald-50/60 text-emerald-600">Placement Check</th>
                       <th className="px-3 py-3 text-center border-b border-l border-slate-200">Status</th>
                     </tr>
                     <tr className="bg-slate-50 text-xs text-slate-500">
                       <th colSpan={8} className="border-b border-slate-200" />
-                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-blue-50/40">Driver</th>
-                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-blue-50/40">Maint.</th>
-                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-indigo-50/40">Driver</th>
-                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-indigo-50/40">Maint.</th>
+                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-blue-50/40">Driver Remark</th>
+                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-blue-50/40">Maintenance Remark</th>
+                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-indigo-50/40">Driver Remark</th>
+                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-indigo-50/40">Maintenance Remark</th>
                       <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-emerald-50/40">E-Lock</th>
                       <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">IDFY</th>
                       <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Cargo Net</th>

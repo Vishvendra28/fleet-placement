@@ -222,7 +222,7 @@ export default function NewPlacementForm({
                     <svg className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0" />
                     </svg>
-                    <span className="text-xs font-semibold text-emerald-700">Master time: {row.placementTimeOverride}</span>
+                    <span className="text-xs font-semibold text-emerald-700">Placement Time: {row.placementTimeOverride}</span>
                   </div>
                 )}
 
