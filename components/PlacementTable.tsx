@@ -150,6 +150,8 @@ export default function PlacementTable({
   const [swappingId, setSwappingId] = useState<string | null>(null);
   const [swapVehicles, setSwapVehicles] = useState<VehicleOption[]>([]);
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const skipFirstFetch = useRef(!!initialPlacements);
 
   const fetchPlacements = useCallback(async (silent = false) => {
@@ -255,6 +257,16 @@ export default function PlacementTable({
     const all: VehicleOption[] = await res.json();
     setSwapVehicles(all.filter((v) => v.id !== p.vehicle?.id));
     setSwappingId(p.id);
+  }
+
+  async function deleteTrip(id: string) {
+    setDeleting(true);
+    const res = await fetch(`/api/placements/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setPlacements((prev) => prev.filter((p) => p.id !== id));
+    }
+    setDeleting(false);
+    setDeleteConfirmId(null);
   }
 
   async function doVehicleSwap(placementId: string, vehicleId: string) {
@@ -496,6 +508,17 @@ export default function PlacementTable({
                             </span>
                           )}
                           {p.finalStatus === "PENDING" && <CountdownBadge placementTime={p.placementTime} />}
+                          {isAdmin && p.finalStatus !== "PLACED" && (
+                            <button
+                              onClick={() => setDeleteConfirmId(p.id)}
+                              title="Delete trip"
+                              className="text-slate-300 hover:text-red-500 transition-colors mt-0.5"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -763,6 +786,17 @@ export default function PlacementTable({
                               {statusError === p.id && (
                                 <span className="text-[10px] text-red-600 font-medium leading-tight">Resolve open issues first</span>
                               )}
+                              {isAdmin && p.finalStatus !== "PLACED" && (
+                                <button
+                                  onClick={() => setDeleteConfirmId(p.id)}
+                                  title="Delete trip"
+                                  className="text-slate-300 hover:text-red-500 transition-colors mt-0.5"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              )}
                             </div>
                           );
                         })()}
@@ -776,6 +810,55 @@ export default function PlacementTable({
           </div>
         </>
       )}
+
+      {/* Delete confirmation modal */}
+      {deleteConfirmId && (() => {
+        const trip = placements.find((p) => p.id === deleteConfirmId);
+        if (!trip) return null;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="font-bold text-slate-900 text-base">Delete Trip?</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">This action cannot be undone.</p>
+                </div>
+              </div>
+              <div className="bg-slate-50 rounded-xl px-4 py-3 mb-5 space-y-1">
+                <p className="text-sm font-semibold text-slate-800">{trip.client.name}</p>
+                <p className="text-xs text-slate-500">{trip.route.name}</p>
+                <p className="text-xs text-slate-400">{trip.vehicle?.vehicleNumber ?? "No vehicle"} · {new Date(trip.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirmId(null)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteTrip(deleteConfirmId)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {deleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Deleting…
+                    </>
+                  ) : "Delete Trip"}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
