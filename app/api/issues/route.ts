@@ -30,6 +30,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json([]);
     }
 
+    const dateParam = req.nextUrl.searchParams.get("date");
+    if (dateParam) {
+      const d = new Date(dateParam);
+      const nextDay = new Date(d.getTime() + 86400000);
+      where.placement = { date: { gte: d, lt: nextDay } };
+    }
+
     const issues = await prisma.issueAlert.findMany({
       where,
       include: {
@@ -37,6 +44,10 @@ export async function GET(req: NextRequest) {
           select: {
             id: true,
             date: true,
+            cohort: true,
+            laneType: true,
+            placementTime: true,
+            driverNumber1: true,
             client: { select: { name: true } },
             route: { select: { name: true } },
             vehicle: { select: { vehicleNumber: true } },
