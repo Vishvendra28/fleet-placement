@@ -32,10 +32,15 @@ export default async function SameDayPendingPage({ searchParams }: { searchParam
     },
   };
 
-  const effectiveDate = date ?? new Date().toISOString().split("T")[0];
-  const d = new Date(effectiveDate);
-  const next = new Date(d); next.setDate(next.getDate() + 1);
-  where.date = { gte: d, lt: next };
+  if (date) {
+    const d = new Date(date);
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+    where.date = { gte: d, lt: next };
+  } else {
+    const past = new Date(); past.setDate(past.getDate() - 3); past.setUTCHours(0, 0, 0, 0);
+    const future = new Date(); future.setDate(future.getDate() + 7); future.setUTCHours(23, 59, 59, 999);
+    where.date = { gte: past, lte: future };
+  }
   if (client) where.clientId = client;
   if (route) where.routeId = route;
 
