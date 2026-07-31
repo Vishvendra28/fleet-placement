@@ -1,19 +1,12 @@
-const CACHE = 'fleet-v1';
-
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(clients.claim()));
 
-self.addEventListener('fetch', (e) => {
-  // Always network-first — app requires live data
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
-  );
-});
+// No fetch handler — app always needs live data; browser default is fine
 
 self.addEventListener('push', (e) => {
   if (!e.data) return;
   let payload;
-  try { payload = e.data.json(); } catch { payload = { title: 'Fleet Alert', body: e.data.text() }; }
+  try { payload = e.data.json(); } catch (err) { payload = { title: 'Fleet Alert', body: e.data.text() }; }
 
   const title = payload.title || 'Fleet Alert';
   const options = {
@@ -35,9 +28,9 @@ self.addEventListener('notificationclick', (e) => {
   const url = (e.notification.data && e.notification.data.url) || '/dashboard';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      for (const client of windowClients) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          client.navigate(url);
+      for (var i = 0; i < windowClients.length; i++) {
+        var client = windowClients[i];
+        if (client.url.indexOf(self.location.origin) !== -1 && 'focus' in client) {
           return client.focus();
         }
       }
