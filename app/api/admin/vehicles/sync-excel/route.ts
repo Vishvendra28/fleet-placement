@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import * as xlsx from "xlsx";
 
 function excelSerialToString(val: unknown): string | null {
   if (typeof val === "string" && val.trim()) return val.trim();
@@ -56,9 +57,6 @@ export async function POST(req: NextRequest) {
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-
-    // Dynamic import — required for Next.js App Router ESM context
-    const xlsx = await import("xlsx");
 
     // First pass: read only sheet names (fast, no data parsed)
     const wbMeta = xlsx.read(buffer, { bookSheets: true });
