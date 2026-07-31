@@ -326,6 +326,7 @@ export default function PlacementTable({
   const editPlan = canPlan(userRole);
   const editPlace = canPlace(userRole);
   const isAdmin = userRole === "ADMIN";
+  const isKAM = userRole === "KAM";
 
   const uniqueRoutes = useMemo(() => {
     const seen = new Set<string>();
@@ -366,6 +367,28 @@ export default function PlacementTable({
     setStatusFilter(null);
     setDateFilter("");
     setFallbackNotice(null);
+  }
+
+  async function handleExportExcel() {
+    const XLSX = await import("xlsx");
+    const rows = groups.flatMap((group) =>
+      group.items.map((p, i) => ({
+        "Date": formatShortDate(group.date),
+        "#": i + 1,
+        "Client": p.client.name,
+        "Route": p.route.name,
+        "Schedule": p.cohort,
+        "Lane": LANE_TYPE_LABELS[p.laneType] ?? p.laneType,
+        "Vehicle": p.vehicle?.vehicleNumber ?? "",
+        "Driver 1": p.driverNumber1 ?? "",
+        "Driver 2": p.driverNumber2 ?? "",
+        "Status": FINAL_STATUS_LABELS[p.finalStatus] ?? p.finalStatus,
+      }))
+    );
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Trips");
+    XLSX.writeFile(wb, `trips-${new Date().toISOString().split("T")[0]}.xlsx`);
   }
 
   const tableCards = isAdmin ? [PLACED_CARD, PENDING_CARD] : [PLACED_CARD, PENDING_CARD, NOT_PLACED_CARD];
@@ -436,6 +459,17 @@ export default function PlacementTable({
             Clear filters
           </button>
         )}
+        {isKAM && !loading && displayed.length > 0 && (
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 active:scale-95 transition-all shadow-sm"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export Excel
+          </button>
+        )}
       </div>
 
       {fallbackNotice && (
@@ -498,8 +532,57 @@ export default function PlacementTable({
         </div>
       ) : (
         <>
+          {/* ── KAM Mobile card view ── */}
+          {isKAM && (
+            <div className="md:hidden space-y-3">
+              {groups.map((group) => (
+                <React.Fragment key={`kam-mob-${group.date}`}>
+                  <div className="px-1 pb-2 pt-1 flex items-baseline gap-2">
+                    <span className="text-sm font-semibold text-slate-800">{formatLocalDate(group.date)}</span>
+                    <span className="text-xs font-normal text-slate-400">{group.items.length} trip{group.items.length !== 1 ? "s" : ""}</span>
+                  </div>
+                  {group.items.map((p, i) => (
+                    <div key={p.id} className={`rounded-2xl border-2 shadow-sm overflow-hidden ${
+                      p.finalStatus === "PLACED" ? "border-emerald-200 bg-emerald-50/30" :
+                      p.finalStatus === "NOT_PLACED" ? "border-red-200 bg-red-50/30" :
+                      "border-amber-200 bg-amber-50/30"
+                    }`}>
+                      <div className="px-4 pt-3 pb-3 flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs text-slate-400 tabular-nums">#{i + 1}</span>
+                            <span className="font-bold text-slate-900">{p.client.name}</span>
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${p.laneType === "FW" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"}`}>
+                              {LANE_TYPE_LABELS[p.laneType] ?? p.laneType}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">{p.route.name} · {p.cohort}</p>
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs">
+                            <div className="flex items-center gap-1">
+                              <span className="text-slate-400">Vehicle</span>
+                              <span className="font-mono font-semibold text-slate-700">{p.vehicle?.vehicleNumber ?? "—"}</span>
+                            </div>
+                            {(p.driverNumber1 || p.driverNumber2) && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-400">Driver</span>
+                                <span className="font-mono text-slate-700">{[p.driverNumber1, p.driverNumber2].filter(Boolean).join(" · ")}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full border flex-shrink-0 ${STATUS_COLOR[p.finalStatus]}`}>
+                          {FINAL_STATUS_LABELS[p.finalStatus]}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
+
           {/* ── Mobile card view ── */}
-          <div className="md:hidden space-y-3">
+          <div className={`space-y-3 ${isKAM ? "hidden" : "md:hidden"}`}>
             {groups.map((group) => (
               <React.Fragment key={group.date}>
                 <div className="px-1 pb-2 pt-1 flex items-baseline gap-2">
@@ -658,8 +741,69 @@ export default function PlacementTable({
             ))}
           </div>
 
+          {/* ── KAM simplified desktop table ── */}
+          {isKAM && (
+            <div className="hidden md:block space-y-5">
+              {groups.map((group) => (
+                <div key={`kam-${group.date}`}>
+                  <div className="mb-2.5 px-1 flex items-baseline gap-2">
+                    <h3 className="text-base font-semibold text-slate-800">{formatLocalDate(group.date)}</h3>
+                    <span className="text-sm text-slate-400">{group.items.length} trip{group.items.length !== 1 ? "s" : ""}</span>
+                  </div>
+                  <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
+                    <table className="w-full text-sm border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                          <th className="px-3 py-3 text-left border-b border-slate-200">#</th>
+                          <th className="px-3 py-3 text-left border-b border-slate-200">Client</th>
+                          <th className="px-3 py-3 text-left border-b border-slate-200">Route</th>
+                          <th className="px-3 py-3 text-left border-b border-slate-200">Schedule</th>
+                          <th className="px-3 py-3 text-left border-b border-slate-200">Lane</th>
+                          <th className="px-3 py-3 text-left border-b border-slate-200">Vehicle</th>
+                          <th className="px-3 py-3 text-left border-b border-slate-200">Driver</th>
+                          <th className="px-3 py-3 text-left border-b border-slate-200">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.items.map((p, i) => (
+                          <tr key={p.id} className={`border-b transition-colors ${ROW_BG[p.finalStatus] ?? "hover:bg-slate-50/70"}`}>
+                            <td className="px-3 py-2.5 text-slate-400 text-xs">{i + 1}</td>
+                            <td className="px-3 py-2.5 font-semibold text-slate-900 whitespace-nowrap">{p.client.name}</td>
+                            <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{p.route.name}</td>
+                            <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap text-xs">{p.cohort}</td>
+                            <td className="px-3 py-2.5 whitespace-nowrap">
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.laneType === "FW" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"}`}>
+                                {LANE_TYPE_LABELS[p.laneType] ?? p.laneType}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 whitespace-nowrap font-mono text-xs text-slate-500">{p.vehicle?.vehicleNumber ?? "—"}</td>
+                            <td className="px-3 py-2.5 whitespace-nowrap">
+                              {p.driverNumber1 || p.driverNumber2 ? (
+                                <div className="space-y-0.5">
+                                  {p.driverNumber1 && <p className="text-xs text-slate-600 font-mono">{p.driverNumber1}</p>}
+                                  {p.driverNumber2 && <p className="text-xs text-slate-400 font-mono">{p.driverNumber2}</p>}
+                                </div>
+                              ) : (
+                                <span className="text-slate-300 text-xs">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${STATUS_COLOR[p.finalStatus]}`}>
+                                {FINAL_STATUS_LABELS[p.finalStatus]}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* ── Desktop table view ── */}
-          <div className="hidden md:block space-y-5">
+          <div className={isKAM ? "hidden" : "hidden md:block space-y-5"}>
             {groups.map((group) => (
               <div key={group.date}>
                 <div className="mb-2.5 px-1 flex items-baseline gap-2">
