@@ -7,11 +7,11 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ["web-push"],
+    serverComponentsExternalPackages: ["web-push", "xlsx"],
   },
   webpack: (config, { isServer }) => {
     if (isServer) {
-      const extras = ["web-push"];
+      const extras = ["web-push", "xlsx"];
       if (Array.isArray(config.externals)) {
         config.externals.push(...extras);
       } else {
