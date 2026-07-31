@@ -19,12 +19,13 @@ type Row = {
   driverNumber1: string;
   driverNumber2: string;
   placementTimeOverride: string;
+  vendorName: string;
 };
 
 const emptyRow = (): Row => ({
   clientId: "", routeId: "", newRouteName: "", newRouteOrigin: "", newRouteDestination: "",
   cohort: "", laneType: "FW", vehicleId: "",
-  driverNumber1: "", driverNumber2: "", placementTimeOverride: "",
+  driverNumber1: "", driverNumber2: "", placementTimeOverride: "", vendorName: "",
 });
 
 export default function NewPlacementForm({
@@ -67,7 +68,7 @@ export default function NewPlacementForm({
     const mr = await res.json();
     if (!mr) return;
     setRows((prev) => prev.map((r, idx) => idx === i
-      ? { ...r, cohort: mr.cohort || r.cohort, placementTimeOverride: mr.placementTime || r.placementTimeOverride }
+      ? { ...r, cohort: mr.cohort || r.cohort, placementTimeOverride: mr.placementTime || r.placementTimeOverride, vendorName: mr.vendor?.name || "ZAST" }
       : r
     ));
   }, []);
@@ -223,11 +224,16 @@ export default function NewPlacementForm({
                 </div>
 
                 {row.placementTimeOverride && !isNewRoute && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg col-span-2 md:col-span-1">
-                    <svg className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0" />
-                    </svg>
-                    <span className="text-xs font-semibold text-emerald-700">Placement Time: {row.placementTimeOverride}</span>
+                  <div className="flex flex-col gap-0.5 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg col-span-2 md:col-span-1">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0" />
+                      </svg>
+                      <span className="text-xs font-semibold text-emerald-700">Placement Time: {row.placementTimeOverride}</span>
+                    </div>
+                    {row.vendorName && (
+                      <span className="text-xs text-emerald-600 pl-5">Vendor: {row.vendorName}</span>
+                    )}
                   </div>
                 )}
 
@@ -306,16 +312,16 @@ export default function NewPlacementForm({
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-500 mb-1 block">Driver 1 Number</label>
-                  <input type="tel" value={row.driverNumber1}
+                  <label className="text-xs font-medium text-gray-500 mb-1 block">Driver 1 Name</label>
+                  <input type="text" value={row.driverNumber1}
                     onChange={(e) => setField(i, "driverNumber1", e.target.value)}
-                    placeholder="e.g. 9876543210" className={inputCls} />
+                    placeholder="e.g. Ram Kumar" className={inputCls} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-500 mb-1 block">Driver 2 Number</label>
-                  <input type="tel" value={row.driverNumber2}
+                  <label className="text-xs font-medium text-gray-500 mb-1 block">Driver 2 Name</label>
+                  <input type="text" value={row.driverNumber2}
                     onChange={(e) => setField(i, "driverNumber2", e.target.value)}
-                    placeholder="e.g. 9876543210" className={inputCls} />
+                    placeholder="e.g. Shyam Singh" className={inputCls} />
                 </div>
               </div>
             </div>

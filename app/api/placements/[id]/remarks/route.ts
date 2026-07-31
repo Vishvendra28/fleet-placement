@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { FinalStatus, IssueCategory } from "@prisma/client";
+import { FinalStatus, IssueCategory, IssueSource } from "@prisma/client";
 import { ISSUE_VALUE_LABELS } from "@/lib/constants";
 import { logAudit } from "@/lib/audit";
 import { apiError } from "@/lib/api-error";
@@ -14,7 +14,8 @@ async function raiseIssue(
   issueValue: string,
   raisedById: string,
   notifyRoles: string[],
-  notifyEmails: string[] = []
+  notifyEmails: string[] = [],
+  source?: IssueSource
 ) {
   // Serializable transaction + @@unique([placementId, issueCategory, issueValue])
   // eliminates the TOCTOU race: concurrent calls either hit the unique constraint
@@ -27,14 +28,14 @@ async function raiseIssue(
       });
       if (existing) {
         if (existing.status !== "RESOLVED") return null; // already active, skip
-        // Re-raise: reset a resolved issue back to OPEN
+        // Re-raise: reset a resolved issue back to OPEN, update source
         return tx.issueAlert.update({
           where: { id: existing.id },
-          data: { status: "OPEN", raisedById, raisedAt: new Date(), resolvedById: null, resolvedAt: null, resolutionNote: null, eta: null },
+          data: { status: "OPEN", raisedById, raisedAt: new Date(), resolvedById: null, resolvedAt: null, resolutionNote: null, eta: null, ...(source ? { source } : {}) },
         });
       }
       return tx.issueAlert.create({
-        data: { placementId, issueCategory: category, issueValue, raisedById, status: "OPEN" },
+        data: { placementId, issueCategory: category, issueValue, raisedById, status: "OPEN", ...(source ? { source } : {}) },
       });
     }, { isolationLevel: "Serializable" });
   } catch (err: unknown) {
@@ -132,15 +133,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
             update: { ...remarkData, filledById: session.user.id, filledAt: now },
           });
 
+      const issueSource: IssueSource = section === "d1" ? "D1" : "SAME_DAY";
       if (driverIssue && driverIssue !== "NO_ISSUE") {
-        await raiseIssue(id, "DRIVER", driverIssue as string, session.user.id, ["DRIVER_MANAGEMENT"]);
+        await raiseIssue(id, "DRIVER", driverIssue as string, session.user.id, ["DRIVER_MANAGEMENT"], [], issueSource);
       }
       if (maintenanceIssue && maintenanceIssue !== "NO_ISSUE") {
         if (maintenanceIssue === "TYRE_AND_ALIGNMENT") {
           // Tyre & Alignment → Gaurav (Store & Tyre). EQUIPMENT category so Gaurav can see it in his issues list.
-          await raiseIssue(id, "EQUIPMENT", maintenanceIssue as string, session.user.id, ["STORE_AND_TYRE"]);
+          await raiseIssue(id, "EQUIPMENT", maintenanceIssue as string, session.user.id, ["STORE_AND_TYRE"], [], issueSource);
         } else {
-          await raiseIssue(id, "MAINTENANCE", maintenanceIssue as string, session.user.id, ["MAINTENANCE_TEAM"]);
+          await raiseIssue(id, "MAINTENANCE", maintenanceIssue as string, session.user.id, ["MAINTENANCE_TEAM"], [], issueSource);
         }
       }
 
@@ -182,13 +184,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       });
 
       if (elockStatus === "UNHEALTHY" || elockStatus === "LOCK_DAMAGE") {
-        await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["E_LOCK_TEAM"], ["mohit@fleet.com"]);
+        await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["E_LOCK_TEAM"], ["mohit@fleet.com"], "PLACEMENT_TEAM");
       }
-      if (cargoNet === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"]);
-      if (tirpal === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"]);
-      if (stepney === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "STEPNEY", session.user.id, ["STORE_AND_TYRE"]);
+      if (cargoNet === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"], "PLACEMENT_TEAM");
+      if (tirpal === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"], "PLACEMENT_TEAM");
+      if (stepney === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "STEPNEY", session.user.id, ["STORE_AND_TYRE"], [], "PLACEMENT_TEAM");
       if (idfyDrivers === "REQUIRED_NOT_AVAILABLE") {
-        await raiseIssue(id, "DRIVER", "IDFY_NOT_AVAILABLE", session.user.id, ["DRIVER_MANAGEMENT"]);
+        await raiseIssue(id, "DRIVER", "IDFY_NOT_AVAILABLE", session.user.id, ["DRIVER_MANAGEMENT"], [], "PLACEMENT_TEAM");
       }
 
       await logAudit({

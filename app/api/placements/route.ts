@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
         d1Remark: { select: { driverIssue: true, maintenanceIssue: true } },
         sameDayRemark: { select: { driverIssue: true, maintenanceIssue: true } },
         placementTeamRemark: { select: { elockStatus: true, idfyDrivers: true, cargoNet: true, tirpal: true, stepney: true } },
-        issueAlerts: { select: { id: true, status: true, issueCategory: true, issueValue: true } },
+        issueAlerts: { select: { id: true, status: true, issueCategory: true, issueValue: true, source: true } },
       },
       orderBy: [{ date: "asc" }, { placementTime: "asc" }],
     });
@@ -95,15 +95,25 @@ export async function POST(req: NextRequest) {
 
         const masterRoute = await tx.masterRoute.findFirst({
           where: { clientId, routeId, isActive: true },
-          select: { compliance: true },
+          select: { compliance: true, placementTime: true },
         });
         const compliance = masterRoute?.compliance ?? null;
 
-        const timeStr = SCHEDULE_TIMES[cohort] ?? "09:00";
-        const [hours, minutes] = timeStr.split(":").map(Number);
+        let utcHours: number, utcMinutes: number;
+        if (masterRoute?.placementTime) {
+          // MasterRoute.placementTime is in IST (e.g. "22:00" = 10 PM IST) — convert to UTC
+          const [h, m] = masterRoute.placementTime.split(":").map(Number);
+          const totalUTC = ((h * 60 + m - 330) % 1440 + 1440) % 1440;
+          utcHours = Math.floor(totalUTC / 60);
+          utcMinutes = totalUTC % 60;
+        } else {
+          // SCHEDULE_TIMES are already in UTC
+          const timeStr = SCHEDULE_TIMES[cohort] ?? "09:00";
+          [utcHours, utcMinutes] = timeStr.split(":").map(Number);
+        }
         const placementTime = new Date(`${date}T00:00:00Z`);
-        placementTime.setUTCHours(hours, minutes, 0, 0);
-        const cutoffTime = new Date(placementTime.getTime() - 2 * 60 * 60 * 1000);
+        placementTime.setUTCHours(utcHours, utcMinutes, 0, 0);
+        const cutoffTime = new Date(placementTime.getTime() - 3 * 60 * 60 * 1000);
 
         return tx.placement.create({
           data: {

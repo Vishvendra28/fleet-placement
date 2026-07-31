@@ -70,14 +70,24 @@ export async function POST(req: NextRequest) {
 
           const masterRoute = await tx.masterRoute.findFirst({
             where: { clientId: trip.clientId, routeId: trip.routeId, isActive: true },
-            select: { compliance: true },
+            select: { compliance: true, placementTime: true },
           });
 
-          const timeStr = SCHEDULE_TIMES[trip.cohort] ?? "09:00";
-          const [hours, minutes] = timeStr.split(":").map(Number);
+          let utcHours: number, utcMinutes: number;
+          if (masterRoute?.placementTime) {
+            // MasterRoute.placementTime is in IST (e.g. "22:00" = 10 PM IST) — convert to UTC
+            const [h, m] = masterRoute.placementTime.split(":").map(Number);
+            const totalUTC = ((h * 60 + m - 330) % 1440 + 1440) % 1440;
+            utcHours = Math.floor(totalUTC / 60);
+            utcMinutes = totalUTC % 60;
+          } else {
+            // SCHEDULE_TIMES are already in UTC
+            const timeStr = SCHEDULE_TIMES[trip.cohort] ?? "09:00";
+            [utcHours, utcMinutes] = timeStr.split(":").map(Number);
+          }
           const placementTime = new Date(`${date}T00:00:00Z`);
-          placementTime.setUTCHours(hours, minutes, 0, 0);
-          const cutoffTime = new Date(placementTime.getTime() - 2 * 60 * 60 * 1000);
+          placementTime.setUTCHours(utcHours, utcMinutes, 0, 0);
+          const cutoffTime = new Date(placementTime.getTime() - 3 * 60 * 60 * 1000);
 
           const placement = await tx.placement.create({
             data: {

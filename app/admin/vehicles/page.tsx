@@ -13,6 +13,7 @@ type Vehicle = {
   id: string; vehicleNumber: string; type: string | null; isActive: boolean;
   inactiveReason: string | null; inactiveComment: string | null;
   utilization: { placedDays: number; totalDays: number };
+  monthlyIssueCounts: { driver: number; maintenance: number };
   placements: {
     date: string; client: { name: string };
     issueAlerts: (Omit<IssueAlert, "clientName" | "placementDate"> & {
@@ -213,6 +214,21 @@ export default function VehiclesAdminPage() {
                       {INACTIVE_REASON_LABELS[vehicle.inactiveReason] ?? vehicle.inactiveReason}
                       {vehicle.inactiveComment && ` — ${vehicle.inactiveComment}`}
                     </span>
+                  )}
+                  {/* Monthly issue counts */}
+                  {(vehicle.monthlyIssueCounts.driver > 0 || vehicle.monthlyIssueCounts.maintenance > 0) && (
+                    <div className="flex items-center gap-1.5">
+                      {vehicle.monthlyIssueCounts.driver > 0 && (
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+                          Driver {vehicle.monthlyIssueCounts.driver}/mo
+                        </span>
+                      )}
+                      {vehicle.monthlyIssueCounts.maintenance > 0 && (
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-pink-100 text-pink-700 border border-pink-200">
+                          Maint. {vehicle.monthlyIssueCounts.maintenance}/mo
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
