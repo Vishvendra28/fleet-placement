@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 
+const VAPID_KEY_STORAGE = "fleet-vapid-key";
+
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -26,17 +28,16 @@ export default function PushSubscriber() {
         const { vapidPublicKey } = await configRes.json();
         if (!vapidPublicKey) return;
 
-        // 2. Skip immediately if user already blocked notifications
+        // 2. Skip if blocked
         if (Notification.permission === "denied") return;
 
-        // 3. Ask for permission FIRST — before waiting for SW so prompt
-        //    appears right away and doesn't hang on SW activation
+        // 3. Ask permission first (before SW wait so prompt appears immediately)
         if (Notification.permission !== "granted") {
           const permission = await Notification.requestPermission();
           if (permission !== "granted") return;
         }
 
-        // 4. Register SW explicitly and wait with a timeout
+        // 4. Register SW and wait with timeout
         await navigator.serviceWorker.register("/sw.js");
         let registration: ServiceWorkerRegistration;
         try {
@@ -51,9 +52,17 @@ export default function PushSubscriber() {
           return;
         }
 
-        // 5. Re-send existing subscription to keep server in sync
+        // 5. If VAPID key changed since last subscription, unsubscribe the old
+        //    one so the browser creates a fresh subscription with the new key.
+        //    We detect this by storing the key used last time in localStorage.
+        const storedKey = localStorage.getItem(VAPID_KEY_STORAGE);
         const existing = await registration.pushManager.getSubscription();
-        if (existing) {
+
+        if (existing && storedKey !== vapidPublicKey) {
+          // Key rotated — force fresh subscription
+          await existing.unsubscribe();
+        } else if (existing) {
+          // Same key — just re-save to keep server in sync and exit
           await fetch("/api/push/subscribe", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -62,11 +71,12 @@ export default function PushSubscriber() {
           return;
         }
 
-        // 6. Create new subscription
+        // 6. Create new subscription with current VAPID key
         const sub = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
         });
+        localStorage.setItem(VAPID_KEY_STORAGE, vapidPublicKey);
         await fetch("/api/push/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
