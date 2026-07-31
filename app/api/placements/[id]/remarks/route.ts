@@ -6,6 +6,7 @@ import { FinalStatus, IssueCategory } from "@prisma/client";
 import { ISSUE_VALUE_LABELS } from "@/lib/constants";
 import { logAudit } from "@/lib/audit";
 import { apiError } from "@/lib/api-error";
+import { sendPushToRolesAndEmails } from "@/lib/push";
 
 async function raiseIssue(
   placementId: string,
@@ -64,8 +65,8 @@ async function raiseIssue(
     return true;
   });
 
+  const label = ISSUE_VALUE_LABELS[issueValue] || issueValue;
   if (allRecipients.length) {
-    const label = ISSUE_VALUE_LABELS[issueValue] || issueValue;
     await prisma.notification.createMany({
       data: allRecipients.map((u) => ({
         userId: u.id,
@@ -76,6 +77,14 @@ async function raiseIssue(
       skipDuplicates: true,
     });
   }
+
+  // Send push notification to all recipients
+  await sendPushToRolesAndEmails(notifyRoles, notifyEmails, {
+    title: "⚠️ Fleet Issue Alert",
+    body: `${placement.client.name} | ${placement.route.name} — ${label} needs attention`,
+    url: "/dashboard/issues",
+    tag: `issue-${issue.id}`,
+  });
 
   await logAudit({
     userId: raisedById,
@@ -173,10 +182,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       });
 
       if (elockStatus === "UNHEALTHY" || elockStatus === "LOCK_DAMAGE") {
-        await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["MAINTENANCE_TEAM", "E_LOCK_TEAM"]);
+        await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["E_LOCK_TEAM"], ["mohit@fleet.com"]);
       }
-      if (cargoNet === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, [], ["gaurav@fleet.com", "mohit@fleet.com", "shahid@fleet.com"]);
-      if (tirpal === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, [], ["gaurav@fleet.com", "mohit@fleet.com", "shahid@fleet.com"]);
+      if (cargoNet === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"]);
+      if (tirpal === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"]);
       if (stepney === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "STEPNEY", session.user.id, ["STORE_AND_TYRE"]);
       if (idfyDrivers === "REQUIRED_NOT_AVAILABLE") {
         await raiseIssue(id, "DRIVER", "IDFY_NOT_AVAILABLE", session.user.id, ["DRIVER_MANAGEMENT"]);

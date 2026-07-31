@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import PwaRegister from "./pwa-register";
+import PushSubscriber from "./components/PushSubscriber";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,7 +29,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <PushSubscriber />
+        </Providers>
         <PwaRegister />
       </body>
     </html>

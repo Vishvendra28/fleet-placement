@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ISSUE_VALUE_LABELS } from "@/lib/constants";
 import { logAudit } from "@/lib/audit";
 import { apiError } from "@/lib/api-error";
+import { sendPushToRoles } from "@/lib/push";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -39,10 +40,11 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       },
     });
 
-    // Bug 5 fix: notify PLANNING_TEAM and ADMIN when an issue is resolved.
+    // Notify Planning Team + Placement Team + Admin on resolve (DB + push)
     if (status === "RESOLVED") {
+      const resolveRoles = ["PLANNING_TEAM", "PLACEMENT_TEAM", "ADMIN"];
       const notifyUsers = await prisma.user.findMany({
-        where: { role: { in: ["PLANNING_TEAM", "ADMIN"] } },
+        where: { role: { in: resolveRoles as never[] } },
         select: { id: true },
       });
       const label = ISSUE_VALUE_LABELS[issue.issueValue] ?? issue.issueValue;
@@ -54,6 +56,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           message: `RESOLVED: ${issue.placement.client.name} | ${issue.placement.route.name} — ${label} has been resolved by ${session.user.name}.`,
         })),
         skipDuplicates: true,
+      });
+      await sendPushToRoles(resolveRoles, {
+        title: "✅ Issue Resolved",
+        body: `${issue.placement.client.name} | ${issue.placement.route.name} — ${label} resolved by ${session.user.name}`,
+        url: "/dashboard/issues",
+        tag: `resolved-${params.id}`,
       });
     }
 
