@@ -102,23 +102,42 @@ export async function GET(req: NextRequest) {
     }
 
     // ── 3. ETA_OVERDUE: IN_PROGRESS issues whose committed ETA has passed ──
-    // Bug 6 fix: escalate when team committed to an ETA but hasn't resolved it.
     const overdueIssues = await prisma.issueAlert.findMany({
       where: { status: "IN_PROGRESS", eta: { lte: now } },
       include: { placement: { include: { client: true, route: true } } },
     });
 
-    const ETA_ROUTING: Record<string, string[]> = {
-      DRIVER:      ["DRIVER_MANAGEMENT", "PLANNING_TEAM"],
-      MAINTENANCE: ["MAINTENANCE_TEAM",  "PLANNING_TEAM"],
-      EQUIPMENT:   ["STORE_AND_TYRE",    "PLANNING_TEAM"],
-    };
+    const ELOCK_VALUES = ["UNHEALTHY", "LOCK_DAMAGE"];
 
     for (const issue of overdueIssues) {
-      const roles = ETA_ROUTING[issue.issueCategory] ?? ["PLANNING_TEAM"];
-      const recipients = await prisma.user.findMany({
-        where: { role: { in: roles as never[] } },
-        select: { id: true },
+      let roles: string[];
+      let emails: string[] = [];
+
+      if (issue.issueCategory === "DRIVER") {
+        roles = ["DRIVER_MANAGEMENT", "PLANNING_TEAM", "ADMIN"];
+      } else if (issue.issueCategory === "MAINTENANCE") {
+        roles = ["MAINTENANCE_TEAM", "PLANNING_TEAM", "ADMIN"];
+      } else if (ELOCK_VALUES.includes(issue.issueValue)) {
+        // E-Lock: same routing as the initial raise alert
+        roles = ["E_LOCK_TEAM", "ADMIN"];
+        emails = ["mohit@fleet.com"];
+      } else {
+        // Cargo Net, Tirpal, Stepney, Tyre & Alignment
+        roles = ["STORE_AND_TYRE", "PLANNING_TEAM", "ADMIN"];
+      }
+
+      const [roleUsers, emailUsers] = await Promise.all([
+        prisma.user.findMany({ where: { role: { in: roles as never[] } }, select: { id: true } }),
+        emails.length
+          ? prisma.user.findMany({ where: { email: { in: emails } }, select: { id: true } })
+          : Promise.resolve([]),
+      ]);
+
+      const seen = new Set<string>();
+      const recipients = [...roleUsers, ...emailUsers].filter((u) => {
+        if (seen.has(u.id)) return false;
+        seen.add(u.id);
+        return true;
       });
       if (!recipients.length) continue;
 
