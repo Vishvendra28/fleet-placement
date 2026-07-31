@@ -7,7 +7,7 @@ import { apiError } from "@/lib/api-error";
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "VEHICLE_HEALTH_TEAM")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const activeOnly = req.nextUrl.searchParams.get("active") === "true";
     const withIssues = req.nextUrl.searchParams.get("withIssues") === "true";

@@ -8,7 +8,7 @@ import { apiError } from "@/lib/api-error";
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!session || (session.user.role !== "ADMIN" && session.user.role !== "VEHICLE_HEALTH_TEAM")) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
     const body = await req.json();
     const existing = await prisma.vehicle.findUnique({ where: { id: params.id } });

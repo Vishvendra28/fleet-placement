@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import PlacementTable from "@/components/PlacementTable";
 import IssueDashboard from "@/components/IssueDashboard";
 import DashboardAlerts from "@/components/DashboardAlerts";
@@ -11,6 +12,7 @@ const ROLE_LABELS: Record<string, string> = {
   ADMIN: "Admin", PLANNING_TEAM: "Planning Team", PLACEMENT_TEAM: "Placement Team",
   DRIVER_MANAGEMENT: "Driver Management", MAINTENANCE_TEAM: "Maintenance Team",
   STORE_AND_TYRE: "Store & Tyre", E_LOCK_TEAM: "E-Lock Team", KAM: "KAM",
+  VEHICLE_HEALTH_TEAM: "Vehicle Health",
 };
 
 export default async function DashboardPage({ searchParams }: { searchParams: { date?: string } }) {
@@ -38,6 +40,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
   if (session?.user.role !== "ADMIN") {
     const userRole = session!.user.role;
+    if (userRole === "VEHICLE_HEALTH_TEAM") redirect("/admin/vehicles");
     if (["DRIVER_MANAGEMENT", "MAINTENANCE_TEAM", "STORE_AND_TYRE", "E_LOCK_TEAM"].includes(userRole)) {
       return (
         <div>

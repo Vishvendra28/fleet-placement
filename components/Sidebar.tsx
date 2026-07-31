@@ -10,7 +10,7 @@ type User = { id: string; name: string; email: string; role: Role };
 const ROLE_LABEL: Record<Role, string> = {
   ADMIN: "Admin", PLANNING_TEAM: "Planning Team", PLACEMENT_TEAM: "Placement Team",
   DRIVER_MANAGEMENT: "Driver Mgmt", MAINTENANCE_TEAM: "Maintenance", STORE_AND_TYRE: "Store & Tyre",
-  E_LOCK_TEAM: "E-Lock Team", KAM: "KAM",
+  E_LOCK_TEAM: "E-Lock Team", KAM: "KAM", VEHICLE_HEALTH_TEAM: "Vehicle Health",
 };
 const ROLE_COLOR: Record<Role, string> = {
   ADMIN: "bg-violet-500/25 text-violet-300",
@@ -21,6 +21,7 @@ const ROLE_COLOR: Record<Role, string> = {
   STORE_AND_TYRE: "bg-yellow-500/25 text-yellow-300",
   E_LOCK_TEAM: "bg-cyan-500/25 text-cyan-300",
   KAM: "bg-red-500/25 text-red-300",
+  VEHICLE_HEALTH_TEAM: "bg-teal-500/25 text-teal-300",
 };
 
 function SvgIcon({ d, cls }: { d: string; cls?: string }) {
@@ -65,7 +66,14 @@ function NavLink({ item, pathname, onClose }: { item: NavItem; pathname: string;
 }
 
 const MAIN_NAV: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: "home" },
+  {
+    label: "Dashboard", href: "/dashboard", icon: "home",
+    roles: ["ADMIN", "PLANNING_TEAM", "PLACEMENT_TEAM", "DRIVER_MANAGEMENT", "MAINTENANCE_TEAM", "STORE_AND_TYRE", "E_LOCK_TEAM", "KAM"],
+  },
+  {
+    label: "Vehicle Health", href: "/admin/vehicles", icon: "truck",
+    roles: ["VEHICLE_HEALTH_TEAM"],
+  },
   {
     label: "Issues", href: "/issues", icon: "alert",
     roles: ["ADMIN", "PLANNING_TEAM", "PLACEMENT_TEAM", "DRIVER_MANAGEMENT", "MAINTENANCE_TEAM", "STORE_AND_TYRE", "E_LOCK_TEAM"],

@@ -16,6 +16,7 @@ enum Role {
   STORE_AND_TYRE
   E_LOCK_TEAM
   KAM
+  VEHICLE_HEALTH_TEAM
 }
 
 enum LaneType {

@@ -5,7 +5,7 @@ import Sidebar from "@/components/Sidebar";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "ADMIN") redirect("/dashboard");
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "VEHICLE_HEALTH_TEAM")) redirect("/dashboard");
   return (
     <div className="min-h-screen bg-gray-50">
       <Sidebar user={session.user} />
