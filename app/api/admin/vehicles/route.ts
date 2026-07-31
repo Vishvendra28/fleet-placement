@@ -52,9 +52,28 @@ export async function GET(req: NextRequest) {
       orderBy: { vehicleNumber: "asc" },
     });
 
+    // Monthly DRIVER + MAINTENANCE issue counts per vehicle
+    const vehicleIds = vehicles.map((v) => v.id);
+    const monthlyIssues = await prisma.issueAlert.findMany({
+      where: {
+        raisedAt: { gte: monthStart, lt: monthEnd },
+        issueCategory: { in: ["DRIVER", "MAINTENANCE"] },
+        placement: { vehicleId: { in: vehicleIds } },
+      },
+      select: { issueCategory: true, placement: { select: { vehicleId: true } } },
+    });
+    const monthlyCountMap: Record<string, { driver: number; maintenance: number }> = {};
+    for (const issue of monthlyIssues) {
+      const vId = issue.placement.vehicleId!;
+      if (!monthlyCountMap[vId]) monthlyCountMap[vId] = { driver: 0, maintenance: 0 };
+      if (issue.issueCategory === "DRIVER") monthlyCountMap[vId].driver++;
+      else monthlyCountMap[vId].maintenance++;
+    }
+
     return NextResponse.json(vehicles.map((v) => ({
       ...v,
       utilization: { placedDays: v._count.placements, totalDays: daysInMonth },
+      monthlyIssueCounts: monthlyCountMap[v.id] ?? { driver: 0, maintenance: 0 },
     })));
   } catch (err) {
     return apiError(err);

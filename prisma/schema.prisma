@@ -75,6 +75,12 @@ enum IssueStatus {
   RESOLVED
 }
 
+enum IssueSource {
+  D1
+  SAME_DAY
+  PLACEMENT_TEAM
+}
+
 enum NotificationType {
   CUTOFF_ALERT
   PENDING_ALERT
@@ -284,6 +290,7 @@ model IssueAlert {
   issueCategory  IssueCategory
   issueValue     String
   status         IssueStatus   @default(OPEN)
+  source         IssueSource?
   raisedById     String
   raisedAt       DateTime      @default(now())
   resolvedById   String?
