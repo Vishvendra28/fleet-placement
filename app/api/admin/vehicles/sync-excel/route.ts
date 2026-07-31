@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { apiError } from "@/lib/api-error";
 
 function excelSerialToString(val: unknown): string | null {
+  if (typeof val === "string" && val.trim()) return val.trim();
   if (typeof val !== "number" || val < 1) return null;
   const d = new Date(Math.round((val - 25569) * 86400 * 1000));
   return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
@@ -56,20 +56,43 @@ export async function POST(req: NextRequest) {
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const xlsx = require("xlsx");
-    const wb = xlsx.read(buffer, { type: "buffer" });
-    const sheetNames: string[] = wb.SheetNames;
+
+    // Dynamic import — required for Next.js App Router ESM context
+    const xlsx = await import("xlsx");
+
+    // First pass: read only sheet names (fast, no data parsed)
+    const wbMeta = xlsx.read(buffer, { bookSheets: true });
+    const allSheetNames: string[] = wbMeta.SheetNames;
+
+    // Find which sheets match our 5 targets
+    const targetSheetNames: string[] = [];
+    for (const def of SHEET_DEFS) {
+      const match = allSheetNames.find((n) => n.toLowerCase().includes(def.match));
+      if (match) targetSheetNames.push(match);
+    }
+
+    if (targetSheetNames.length === 0) {
+      return NextResponse.json({
+        error: `No matching sheets found. Sheets in file: ${allSheetNames.join(", ")}`,
+      }, { status: 400 });
+    }
+
+    // Second pass: parse ONLY the 5 target sheets (skips the 65k-row summary sheet)
+    const wb = xlsx.read(buffer, { sheets: targetSheetNames });
 
     const allParsed: ParsedRow[] = [];
 
     for (const def of SHEET_DEFS) {
-      const sheetName = sheetNames.find((n: string) => n.toLowerCase().includes(def.match));
-      if (!sheetName) continue;
+      const sheetName = allSheetNames.find((n) => n.toLowerCase().includes(def.match));
+      if (!sheetName || !wb.Sheets[sheetName]) continue;
+
       const rows: unknown[][] = xlsx.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "" });
+
       for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
+        const row = rows[i] as unknown[];
         const vn = normalizeVN(row[2]);
         if (!vn || vn.length < 4) continue;
+
         allParsed.push({
           vehicleNumber: vn,
           sheetKey: def.key,
@@ -86,7 +109,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Deduplicate by vehicle number — inactive sheet wins over active; otherwise last sheet in SHEET_DEFS order wins
+    // Deduplicate — inactive sheet always beats active for the same vehicle
     const vehicleExcelMap = new Map<string, ParsedRow>();
     for (const row of allParsed) {
       const existing = vehicleExcelMap.get(row.vehicleNumber);
@@ -113,10 +136,18 @@ export async function POST(req: NextRequest) {
     for (const [, row] of vehicleExcelMap) {
       const dbV = dbMap.get(row.vehicleNumber);
       if (!dbV) {
-        unmatched.push({ vehicleNumber: row.vehicleNumber, sheet: row.sheetLabel, location: row.location, remarks: row.remarks });
+        unmatched.push({
+          vehicleNumber: row.vehicleNumber,
+          sheet: row.sheetLabel,
+          location: row.location,
+          remarks: row.remarks,
+        });
         continue;
       }
+
       processedIds.add(dbV.id);
+      if (row.inactive) markedInactive++;
+
       const excelStatus = {
         sheet: row.sheetKey,
         sheetLabel: row.sheetLabel,
@@ -129,31 +160,38 @@ export async function POST(req: NextRequest) {
         amc: row.amc,
         syncedAt,
       };
-      if (row.inactive) markedInactive++;
+
       updates.push(
         prisma.vehicle.update({
           where: { id: dbV.id },
           data: {
-            excelStatus,
+            excelStatus: excelStatus as object,
             ...(row.inactive
-              ? { isActive: false, inactiveReason: INACTIVE_REASON_MAP[row.sheetKey] || null, inactiveComment: row.remarks || null }
+              ? {
+                  isActive: false,
+                  inactiveReason: INACTIVE_REASON_MAP[row.sheetKey] || null,
+                  inactiveComment: row.remarks || null,
+                }
               : {}),
           },
         })
       );
     }
 
-    // Auto-reactivate vehicles previously managed by Excel that are no longer in any sheet
+    // Auto-reactivate vehicles that were Excel-managed but no longer appear in any sheet
     for (const v of allVehicles) {
       if (processedIds.has(v.id)) continue;
       if (!v.excelStatus) continue;
-      const wasInactiveByExcel = !v.isActive && v.inactiveReason && EXCEL_MANAGED_REASONS.includes(v.inactiveReason);
+      const wasInactiveByExcel =
+        !v.isActive && v.inactiveReason && EXCEL_MANAGED_REASONS.includes(v.inactiveReason);
       updates.push(
         prisma.vehicle.update({
           where: { id: v.id },
           data: {
-            excelStatus: null,
-            ...(wasInactiveByExcel ? { isActive: true, inactiveReason: null, inactiveComment: null } : {}),
+            excelStatus: null as unknown as object,
+            ...(wasInactiveByExcel
+              ? { isActive: true, inactiveReason: null, inactiveComment: null }
+              : {}),
           },
         })
       );
@@ -167,8 +205,12 @@ export async function POST(req: NextRequest) {
       matched: processedIds.size,
       markedInactive,
       unmatched,
+      sheetsFound: targetSheetNames,
+      totalParsed: allParsed.length,
     });
-  } catch (err) {
-    return apiError(err);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[sync-excel]", message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
