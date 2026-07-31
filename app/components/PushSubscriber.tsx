@@ -16,14 +16,21 @@ export default function PushSubscriber() {
   useEffect(() => {
     if (!session) return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-    if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) return;
 
     async function subscribe() {
       try {
+        // Fetch VAPID key from server at runtime — not baked into the client
+        // bundle at build time, so Render env vars always take effect immediately
+        const configRes = await fetch("/api/push/config");
+        if (!configRes.ok) return;
+        const { vapidPublicKey } = await configRes.json();
+        if (!vapidPublicKey) return;
+
         const registration = await navigator.serviceWorker.ready;
         const existing = await registration.pushManager.getSubscription();
+
         if (existing) {
-          // Re-send to keep server in sync
+          // Re-send to keep server in sync (e.g. after re-login)
           await fetch("/api/push/subscribe", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -37,7 +44,7 @@ export default function PushSubscriber() {
 
         const sub = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
         });
 
         await fetch("/api/push/subscribe", {
@@ -45,8 +52,8 @@ export default function PushSubscriber() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(sub.toJSON()),
         });
-      } catch {
-        // Silently fail — push is enhancement only
+      } catch (err) {
+        console.error("[PushSubscriber]", err);
       }
     }
 
