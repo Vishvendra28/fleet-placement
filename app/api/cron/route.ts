@@ -47,9 +47,9 @@ export async function GET(req: NextRequest) {
     // Bug 1 fix: DRIVER issues now included. Bug 3 fix: teams notified (not admin) to prevent spam.
     // Admin sees live cutoff violations on the Dashboard already.
     const CUTOFF_ROUTING = [
-      { roles: ["DRIVER_MANAGEMENT"],  categories: ["DRIVER"] },
-      { roles: ["MAINTENANCE_TEAM"],   categories: ["MAINTENANCE"] },
-      { roles: ["STORE_AND_TYRE"],     categories: ["EQUIPMENT"] },
+      { roles: ["DRIVER_MANAGEMENT", "PLANNING_TEAM", "PLACEMENT_TEAM", "ADMIN"],  categories: ["DRIVER"] },
+      { roles: ["MAINTENANCE_TEAM", "PLANNING_TEAM", "PLACEMENT_TEAM", "ADMIN"],   categories: ["MAINTENANCE"] },
+      { roles: ["STORE_AND_TYRE", "PLANNING_TEAM", "PLACEMENT_TEAM", "ADMIN"],     categories: ["EQUIPMENT"] },
     ] as const;
 
     let cutoffCount = 0;
