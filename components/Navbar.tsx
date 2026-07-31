@@ -52,9 +52,14 @@ export default function Navbar({ user }: { user: User }) {
     <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center justify-between sticky top-0 z-40 shadow-sm">
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">F</span>
+          <span className="text-white font-bold text-sm">P</span>
         </div>
-        <span className="font-semibold text-gray-900 hidden sm:block">Fleet Placement</span>
+        <div className="hidden sm:block">
+          <p className="font-semibold text-gray-900 text-sm leading-tight">
+            Planning <span className="text-blue-600">साथी</span>
+          </p>
+          <p className="text-gray-400 text-[10px] italic ml-[40px]">By ZAST Logisolutions</p>
+        </div>
       </div>
 
       <nav className="flex items-center gap-1 text-sm font-medium">

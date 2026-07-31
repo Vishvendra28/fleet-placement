@@ -8,13 +8,13 @@ import PushSubscriber from "./components/PushSubscriber";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Fleet Placement",
-  description: "Vehicle placement tracker for daily fleet operations",
+  title: "Planning साथी",
+  description: "Vehicle placement tracker by ZAST Logisolutions",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Fleet Placement",
+    title: "Planning साथी",
   },
 };
 
