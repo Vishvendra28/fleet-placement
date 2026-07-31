@@ -369,26 +369,35 @@ export default function PlacementTable({
     setFallbackNotice(null);
   }
 
-  async function handleExportExcel() {
-    const XLSX = await import("xlsx");
+  function handleExportExcel() {
+    const headers = ["Date", "#", "Client", "Route", "Schedule", "Lane", "Vehicle", "Driver 1", "Driver 2", "Status"];
     const rows = groups.flatMap((group) =>
-      group.items.map((p, i) => ({
-        "Date": formatShortDate(group.date),
-        "#": i + 1,
-        "Client": p.client.name,
-        "Route": p.route.name,
-        "Schedule": p.cohort,
-        "Lane": LANE_TYPE_LABELS[p.laneType] ?? p.laneType,
-        "Vehicle": p.vehicle?.vehicleNumber ?? "",
-        "Driver 1": p.driverNumber1 ?? "",
-        "Driver 2": p.driverNumber2 ?? "",
-        "Status": FINAL_STATUS_LABELS[p.finalStatus] ?? p.finalStatus,
-      }))
+      group.items.map((p, i) => [
+        formatShortDate(group.date),
+        String(i + 1),
+        p.client.name,
+        p.route.name,
+        p.cohort,
+        LANE_TYPE_LABELS[p.laneType] ?? p.laneType,
+        p.vehicle?.vehicleNumber ?? "",
+        p.driverNumber1 ?? "",
+        p.driverNumber2 ?? "",
+        FINAL_STATUS_LABELS[p.finalStatus] ?? p.finalStatus,
+      ])
     );
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Trips");
-    XLSX.writeFile(wb, `trips-${new Date().toISOString().split("T")[0]}.xlsx`);
+    const escape = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const cell = (v: string) => `<Cell><Data ss:Type="String">${escape(v)}</Data></Cell>`;
+    const xmlRows = [headers, ...rows]
+      .map((r) => `<Row>${r.map(cell).join("")}</Row>`)
+      .join("");
+    const xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Trips"><Table>${xmlRows}</Table></Worksheet></Workbook>`;
+    const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `trips-${new Date().toISOString().split("T")[0]}.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   const tableCards = isAdmin ? [PLACED_CARD, PENDING_CARD] : [PLACED_CARD, PENDING_CARD, NOT_PLACED_CARD];
