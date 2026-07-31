@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
 import BackButton from "@/components/BackButton";
+import PushTestButton from "@/app/components/PushTestButton";
 
 const ROLE_LABEL: Record<Role, string> = {
   ADMIN: "Admin",
@@ -98,6 +99,15 @@ export default async function ProfilePage() {
             {ROLE_LABEL[user.role as Role]}
           </span>
         </div>
+      </div>
+
+      {/* Push notifications */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-3">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Push Notifications</h2>
+        <p className="text-sm text-gray-600">
+          Click below to register this device and send a test notification. If you see the notification, push alerts are working on this device.
+        </p>
+        <PushTestButton />
       </div>
 
       {/* Role description */}
