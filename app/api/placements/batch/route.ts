@@ -12,7 +12,9 @@ type TripInput = {
   cohort: string;
   laneType: "FW" | "RET";
   vehicleId: string;
+  driverName1?: string;
   driverNumber1?: string;
+  driverName2?: string;
   driverNumber2?: string;
 };
 
@@ -100,7 +102,9 @@ export async function POST(req: NextRequest) {
               placementTime,
               cutoffTime,
               compliance: masterRoute?.compliance ?? null,
+              driverName1: trip.driverName1?.trim() || null,
               driverNumber1: trip.driverNumber1?.trim() || null,
+              driverName2: trip.driverName2?.trim() || null,
               driverNumber2: trip.driverNumber2?.trim() || null,
               createdById: session.user.id,
             },

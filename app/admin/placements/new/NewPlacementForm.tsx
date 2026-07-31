@@ -16,7 +16,9 @@ type Row = {
   cohort: string;
   laneType: "FW" | "RET";
   vehicleId: string;
+  driverName1: string;
   driverNumber1: string;
+  driverName2: string;
   driverNumber2: string;
   placementTimeOverride: string;
   vendorName: string;
@@ -25,7 +27,8 @@ type Row = {
 const emptyRow = (): Row => ({
   clientId: "", routeId: "", newRouteName: "", newRouteOrigin: "", newRouteDestination: "",
   cohort: "", laneType: "FW", vehicleId: "",
-  driverNumber1: "", driverNumber2: "", placementTimeOverride: "", vendorName: "",
+  driverName1: "", driverNumber1: "", driverName2: "", driverNumber2: "",
+  placementTimeOverride: "", vendorName: "",
 });
 
 export default function NewPlacementForm({
@@ -124,7 +127,9 @@ export default function NewPlacementForm({
             cohort: row.cohort,
             laneType: row.laneType,
             vehicleId: row.vehicleId,
+            driverName1: row.driverName1,
             driverNumber1: row.driverNumber1,
+            driverName2: row.driverName2,
             driverNumber2: row.driverNumber2,
           })),
         }),
@@ -288,7 +293,7 @@ export default function NewPlacementForm({
                 </div>
               )}
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-medium text-gray-500 mb-1 block">Vehicle *</label>
                   <input
@@ -311,17 +316,27 @@ export default function NewPlacementForm({
                       .map((v) => <option key={v.id} value={v.id}>{v.vehicleNumber}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-500 mb-1 block">Driver 1 Name</label>
-                  <input type="text" value={row.driverNumber1}
-                    onChange={(e) => setField(i, "driverNumber1", e.target.value)}
-                    placeholder="e.g. Ram Kumar" className={inputCls} />
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Driver 1</p>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Name</label>
+                    <input type="text" value={row.driverName1} onChange={(e) => setField(i, "driverName1", e.target.value)} placeholder="e.g. Ram Kumar" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Phone Number</label>
+                    <input type="tel" value={row.driverNumber1} onChange={(e) => setField(i, "driverNumber1", e.target.value)} placeholder="e.g. 9876543210" className={inputCls} />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-500 mb-1 block">Driver 2 Name</label>
-                  <input type="text" value={row.driverNumber2}
-                    onChange={(e) => setField(i, "driverNumber2", e.target.value)}
-                    placeholder="e.g. Shyam Singh" className={inputCls} />
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Driver 2</p>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Name</label>
+                    <input type="text" value={row.driverName2} onChange={(e) => setField(i, "driverName2", e.target.value)} placeholder="e.g. Shyam Singh" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Phone Number</label>
+                    <input type="tel" value={row.driverNumber2} onChange={(e) => setField(i, "driverNumber2", e.target.value)} placeholder="e.g. 9876543210" className={inputCls} />
+                  </div>
                 </div>
               </div>
             </div>

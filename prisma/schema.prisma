@@ -202,7 +202,9 @@ model Placement {
   finalStatus   FinalStatus @default(PENDING)
   alertSent     Boolean     @default(false)
   compliance    String?
+  driverName1   String?
   driverNumber1 String?
+  driverName2   String?
   driverNumber2 String?
   createdById   String
   createdAt     DateTime    @default(now())
