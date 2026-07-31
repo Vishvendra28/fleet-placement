@@ -1,13 +1,4 @@
-import webpush from "web-push";
 import { prisma } from "./prisma";
-
-if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    "mailto:admin@fleet.com",
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
-}
 
 interface PushPayload {
   title: string;
@@ -16,11 +7,34 @@ interface PushPayload {
   tag?: string;
 }
 
+// Variable-based require prevents webpack static analysis —
+// webpack only bundles require("literal"), not require(variable)
+function getWebPush() {
+  const pkg = "web-push";
+  // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+  return require(pkg) as any;
+}
+
+let vapidConfigured = false;
+
+function ensureVapid() {
+  if (vapidConfigured) return;
+  const pub = process.env.VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  if (pub && priv) {
+    getWebPush().setVapidDetails("mailto:admin@fleet.com", pub, priv);
+    vapidConfigured = true;
+  }
+}
+
 async function sendToSubscriptions(
   subs: { id: string; endpoint: string; p256dh: string; auth: string }[],
   payload: PushPayload
 ) {
   if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) return;
+  ensureVapid();
+  const webpush = getWebPush();
+
   await Promise.allSettled(
     subs.map((sub) =>
       webpush
@@ -28,7 +42,7 @@ async function sendToSubscriptions(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           JSON.stringify(payload)
         )
-        .catch(async (err) => {
+        .catch(async (err: { statusCode?: number }) => {
           if (err.statusCode === 410 || err.statusCode === 404) {
             await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
           }
