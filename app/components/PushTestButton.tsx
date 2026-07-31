@@ -79,7 +79,10 @@ export default function PushTestButton() {
       setMsg("Test notification sent! You should see it in a few seconds.");
     } catch (err) {
       setStatus("error");
-      setMsg(err instanceof Error ? err.message : "Unknown error. Check browser console.");
+      const name = err instanceof DOMException ? err.name : "";
+      const message = err instanceof Error ? err.message : String(err);
+      setMsg(name ? `[${name}] ${message}` : message);
+      console.error("[PushTest]", err);
     }
   }
 
