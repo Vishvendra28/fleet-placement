@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
         d1Remark: { select: { driverIssue: true, maintenanceIssue: true } },
         sameDayRemark: { select: { driverIssue: true, maintenanceIssue: true } },
         placementTeamRemark: { select: { elockStatus: true, idfyDrivers: true, cargoNet: true, tirpal: true, stepney: true } },
-        issueAlerts: { select: { status: true } },
+        issueAlerts: { select: { id: true, status: true, issueCategory: true, issueValue: true } },
       },
       orderBy: [{ date: "asc" }, { placementTime: "asc" }],
     });
