@@ -55,10 +55,10 @@ export default function Navbar({ user }: { user: User }) {
           <span className="text-white font-bold text-sm">P</span>
         </div>
         <div className="hidden sm:block">
-          <p className="font-semibold text-gray-900 text-sm leading-tight">
+          <p className="font-semibold text-gray-900 text-lg leading-tight">
             Planning <span className="text-blue-600">साथी</span>
           </p>
-          <p className="text-gray-400 text-[10px] italic ml-[40px]">By ZAST Logisolutions</p>
+          <p className="text-gray-400 text-[10px] italic ml-[52px]">By ZAST Logisolutions</p>
         </div>
       </div>
 

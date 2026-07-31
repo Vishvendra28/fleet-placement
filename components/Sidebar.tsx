@@ -115,10 +115,10 @@ export default function Sidebar({ user }: { user: User }) {
             <SvgIcon d={IC.truck} cls="w-5 h-5 text-white" />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-tight tracking-tight">
+            <p className="text-white font-bold text-base leading-tight tracking-tight">
               Planning <span className="text-blue-400">साथी</span>
             </p>
-            <p className="text-slate-500 text-[10px] italic ml-[44px]">By ZAST Logisolutions</p>
+            <p className="text-slate-500 text-[10px] italic ml-[52px]">By ZAST Logisolutions</p>
           </div>
         </div>
       </div>
