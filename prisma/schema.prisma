@@ -183,6 +183,7 @@ model Vehicle {
   isActive        Boolean   @default(true)
   inactiveReason  String?
   inactiveComment String?
+  excelStatus     Json?
   createdAt       DateTime  @default(now())
 
   placements Placement[]
