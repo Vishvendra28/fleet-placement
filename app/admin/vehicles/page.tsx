@@ -37,12 +37,17 @@ const STAT_CARDS = [
 ];
 
 const INACTIVE_REASONS = [
-  { value: "MAJOR_MAINTENANCE", label: "Major Maintenance" },
   { value: "ACCIDENT", label: "Accident" },
-  { value: "WITHOUT_DRIVER", label: "Without Driver" },
+  { value: "MAJOR_MAINTENANCE", label: "Major Maintenance" },
   { value: "DOCUMENT_ISSUES", label: "Document Issues" },
   { value: "IMPOUND", label: "Impound" },
-  { value: "OTHERS", label: "Others" },
+];
+
+const INACTIVE_SUB_CARDS = [
+  { value: "ACCIDENT", label: "Accident", base: "border-red-200 bg-red-50 text-red-700", ring: "ring-2 ring-red-500 ring-offset-1" },
+  { value: "MAJOR_MAINTENANCE", label: "Major Maintenance", base: "border-orange-200 bg-orange-50 text-orange-700", ring: "ring-2 ring-orange-500 ring-offset-1" },
+  { value: "DOCUMENT_ISSUES", label: "Document", base: "border-yellow-200 bg-yellow-50 text-yellow-700", ring: "ring-2 ring-yellow-500 ring-offset-1" },
+  { value: "IMPOUND", label: "Impound", base: "border-purple-200 bg-purple-50 text-purple-700", ring: "ring-2 ring-purple-500 ring-offset-1" },
 ];
 
 const INACTIVE_REASON_LABELS: Record<string, string> = Object.fromEntries(
@@ -54,6 +59,7 @@ export default function VehiclesAdminPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [cardFilter, setCardFilter] = useState<string | null>(null);
+  const [inactiveSubFilter, setInactiveSubFilter] = useState<string | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
 
   // Inactive reason modal state
@@ -97,11 +103,7 @@ export default function VehiclesAdminPage() {
     await fetch(`/api/admin/vehicles/${inactiveModal}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        toggleActive: true,
-        inactiveReason,
-        inactiveComment: inactiveReason === "OTHERS" ? inactiveComment : null,
-      }),
+      body: JSON.stringify({ toggleActive: true, inactiveReason, inactiveComment: null }),
     });
     setInactiveReason("");
     setInactiveComment("");
@@ -128,7 +130,10 @@ export default function VehiclesAdminPage() {
   const filtered = useMemo(() => {
     let result = rows;
     if (cardFilter === "active") result = result.filter(r => r.vehicle.isActive);
-    else if (cardFilter === "inactive") result = result.filter(r => !r.vehicle.isActive);
+    else if (cardFilter === "inactive") {
+      result = result.filter(r => !r.vehicle.isActive);
+      if (inactiveSubFilter) result = result.filter(r => r.vehicle.inactiveReason === inactiveSubFilter);
+    }
     else if (cardFilter === "issues") result = result.filter(r => r.openCount > 0);
     if (search.trim()) {
       const q = search.trim().toLowerCase();
@@ -138,9 +143,9 @@ export default function VehiclesAdminPage() {
       );
     }
     return result;
-  }, [rows, cardFilter, search]);
+  }, [rows, cardFilter, inactiveSubFilter, search]);
 
-  const canConfirmInactive = inactiveReason && (inactiveReason !== "OTHERS" || inactiveComment.trim().length > 0);
+  const canConfirmInactive = !!inactiveReason;
 
   return (
     <div className="space-y-6">
@@ -156,18 +161,44 @@ export default function VehiclesAdminPage() {
 
       {/* Stat cards */}
       {!loading && (
-        <div className="grid grid-cols-3 gap-4">
-          {STAT_CARDS.map((card) => (
-            <button
-              key={card.value}
-              onClick={() => setCardFilter(f => f === card.value ? null : card.value)}
-              className={`border-2 rounded-xl p-4 text-left transition-all hover:opacity-90 ${card.base} ${cardFilter === card.value ? card.ring : ""}`}
-            >
-              <p className="text-2xl font-bold">{counts[card.value]}</p>
-              <p className="text-sm font-semibold">{card.label}</p>
-              {cardFilter === card.value && <p className="text-xs opacity-70 mt-0.5">Click to clear</p>}
-            </button>
-          ))}
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-4">
+            {STAT_CARDS.map((card) => (
+              <button
+                key={card.value}
+                onClick={() => {
+                  const next = cardFilter === card.value ? null : card.value;
+                  setCardFilter(next);
+                  if (next !== "inactive") setInactiveSubFilter(null);
+                }}
+                className={`border-2 rounded-xl p-4 text-left transition-all hover:opacity-90 ${card.base} ${cardFilter === card.value ? card.ring : ""}`}
+              >
+                <p className="text-2xl font-bold">{counts[card.value]}</p>
+                <p className="text-sm font-semibold">{card.label}</p>
+                {cardFilter === card.value && <p className="text-xs opacity-70 mt-0.5">Click to clear</p>}
+              </button>
+            ))}
+          </div>
+
+          {/* Inactive sub-filter cards */}
+          {cardFilter === "inactive" && (
+            <div className="grid grid-cols-4 gap-3">
+              {INACTIVE_SUB_CARDS.map((sc) => {
+                const cnt = rows.filter(r => !r.vehicle.isActive && r.vehicle.inactiveReason === sc.value).length;
+                return (
+                  <button
+                    key={sc.value}
+                    onClick={() => setInactiveSubFilter(f => f === sc.value ? null : sc.value)}
+                    className={`border-2 rounded-xl p-3 text-left transition-all hover:opacity-90 ${sc.base} ${inactiveSubFilter === sc.value ? sc.ring : ""}`}
+                  >
+                    <p className="text-xl font-bold">{cnt}</p>
+                    <p className="text-xs font-semibold leading-tight">{sc.label}</p>
+                    {inactiveSubFilter === sc.value && <p className="text-[10px] opacity-70 mt-0.5">Click to clear</p>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -180,7 +211,7 @@ export default function VehiclesAdminPage() {
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         {(search || cardFilter) && (
-          <button onClick={() => { setSearch(""); setCardFilter(null); }}
+          <button onClick={() => { setSearch(""); setCardFilter(null); setInactiveSubFilter(null); }}
             className="text-xs text-gray-500 hover:text-gray-700 underline">
             Clear all filters
           </button>
@@ -336,16 +367,6 @@ export default function VehiclesAdminPage() {
                 </label>
               ))}
             </div>
-
-            {inactiveReason === "OTHERS" && (
-              <textarea
-                value={inactiveComment}
-                onChange={(e) => setInactiveComment(e.target.value)}
-                placeholder="Describe the reason…"
-                rows={3}
-                className="w-full border border-gray-300 rounded-xl px-3 py-2.5 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none"
-              />
-            )}
 
             <div className="flex gap-3">
               <button
