@@ -159,9 +159,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
       if (hasDI) {
         if (!driverIssue || driverIssue === "NO_ISSUE") {
-          await prisma.issueAlert.updateMany({
-            where: { placementId: id, issueCategory: "DRIVER", source: issueSource, status: { in: ["OPEN", "IN_PROGRESS"] } },
-            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — No Issue selected" },
+          await prisma.issueAlert.deleteMany({
+            where: { placementId: id, issueCategory: "DRIVER", source: issueSource },
           });
         } else {
           await raiseIssue(id, "DRIVER", driverIssue as string, session.user.id, ["DRIVER_MANAGEMENT"], [], issueSource);
@@ -170,9 +169,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
       if (hasMI) {
         if (!maintenanceIssue || maintenanceIssue === "NO_ISSUE") {
-          await prisma.issueAlert.updateMany({
-            where: { placementId: id, issueCategory: { in: ["MAINTENANCE", "EQUIPMENT"] }, source: issueSource, status: { in: ["OPEN", "IN_PROGRESS"] } },
-            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — No Issue selected" },
+          await prisma.issueAlert.deleteMany({
+            where: { placementId: id, issueCategory: { in: ["MAINTENANCE", "EQUIPMENT"] }, source: issueSource },
           });
         } else if (maintenanceIssue === "TYRE_AND_ALIGNMENT") {
           await raiseIssue(id, "EQUIPMENT", maintenanceIssue as string, session.user.id, ["STORE_AND_TYRE"], [], issueSource);
@@ -235,9 +233,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (elockStatus === "UNHEALTHY" || elockStatus === "LOCK_DAMAGE") {
           await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["E_LOCK_TEAM"], ["mohit@fleet.com"], "PLACEMENT_TEAM");
         } else {
-          await prisma.issueAlert.updateMany({
-            where: { placementId: id, issueValue: { in: ["UNHEALTHY", "LOCK_DAMAGE"] }, source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
-            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          await prisma.issueAlert.deleteMany({
+            where: { placementId: id, issueValue: { in: ["UNHEALTHY", "LOCK_DAMAGE"] }, source: "PLACEMENT_TEAM" },
           });
         }
       }
@@ -245,9 +242,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (cargoNet === "NOT_AVAILABLE") {
           await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"], "PLACEMENT_TEAM");
         } else {
-          await prisma.issueAlert.updateMany({
-            where: { placementId: id, issueValue: "CARGO_NET", source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
-            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          await prisma.issueAlert.deleteMany({
+            where: { placementId: id, issueValue: "CARGO_NET", source: "PLACEMENT_TEAM" },
           });
         }
       }
@@ -255,9 +251,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (tirpal === "NOT_AVAILABLE") {
           await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"], "PLACEMENT_TEAM");
         } else {
-          await prisma.issueAlert.updateMany({
-            where: { placementId: id, issueValue: "TIRPAL", source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
-            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          await prisma.issueAlert.deleteMany({
+            where: { placementId: id, issueValue: "TIRPAL", source: "PLACEMENT_TEAM" },
           });
         }
       }
@@ -265,9 +260,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (stepney === "NOT_AVAILABLE") {
           await raiseIssue(id, "EQUIPMENT", "STEPNEY", session.user.id, ["STORE_AND_TYRE"], [], "PLACEMENT_TEAM");
         } else {
-          await prisma.issueAlert.updateMany({
-            where: { placementId: id, issueValue: "STEPNEY", source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
-            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          await prisma.issueAlert.deleteMany({
+            where: { placementId: id, issueValue: "STEPNEY", source: "PLACEMENT_TEAM" },
           });
         }
       }
@@ -275,9 +269,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         if (idfyDrivers === "REQUIRED_NOT_AVAILABLE") {
           await raiseIssue(id, "DRIVER", "IDFY_NOT_AVAILABLE", session.user.id, ["DRIVER_MANAGEMENT"], [], "PLACEMENT_TEAM");
         } else {
-          await prisma.issueAlert.updateMany({
-            where: { placementId: id, issueValue: "IDFY_NOT_AVAILABLE", source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
-            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          await prisma.issueAlert.deleteMany({
+            where: { placementId: id, issueValue: "IDFY_NOT_AVAILABLE", source: "PLACEMENT_TEAM" },
           });
         }
       }
