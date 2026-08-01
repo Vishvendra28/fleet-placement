@@ -8,7 +8,7 @@ import BackButton from "@/components/BackButton";
 export default async function NewPlacementPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
-  if (session.user.role !== "ADMIN" && session.user.role !== "PLANNING_TEAM") redirect("/dashboard");
+  if (session.user.role !== "ADMIN" && session.user.role !== "PLANNING_TEAM" && session.user.role !== "PLACEMENT_TEAM") redirect("/dashboard");
 
   const [clients, vehicles] = await Promise.all([
     prisma.client.findMany({ orderBy: { name: "asc" } }),
