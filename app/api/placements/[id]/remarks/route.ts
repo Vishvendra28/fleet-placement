@@ -97,6 +97,23 @@ async function raiseIssue(
   });
 }
 
+async function getUpdatedPlacement(id: string) {
+  return prisma.placement.findUnique({
+    where: { id },
+    select: {
+      id: true, date: true, cohort: true, laneType: true, placementTime: true, finalStatus: true,
+      compliance: true, driverNumber1: true, driverNumber2: true,
+      client: { select: { name: true } },
+      route: { select: { name: true } },
+      vehicle: { select: { id: true, vehicleNumber: true } },
+      d1Remark: { select: { driverIssue: true, maintenanceIssue: true } },
+      sameDayRemark: { select: { driverIssue: true, maintenanceIssue: true } },
+      placementTeamRemark: { select: { elockStatus: true, idfyDrivers: true, cargoNet: true, tirpal: true, stepney: true } },
+      issueAlerts: { select: { id: true, status: true, issueCategory: true, issueValue: true, source: true } },
+    },
+  });
+}
+
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
@@ -117,29 +134,47 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (!placement) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
       const { driverIssue, maintenanceIssue } = data;
-      const remarkData = {
-        driverIssue: (driverIssue as string | undefined) ?? null,
-        maintenanceIssue: (maintenanceIssue as string | undefined) ?? null,
+      const hasDI = "driverIssue" in data;
+      const hasMI = "maintenanceIssue" in data;
+      // Only include fields that were actually sent — prevents one field clearing the other
+      const remarkUpdate = {
+        filledById: session.user.id, filledAt: now,
+        ...(hasDI ? { driverIssue: (driverIssue as string | undefined) ?? null } : {}),
+        ...(hasMI ? { maintenanceIssue: (maintenanceIssue as string | undefined) ?? null } : {}),
       };
-      const result = section === "d1"
-        ? await prisma.d1PlanningRemark.upsert({
-            where: { placementId: id },
-            create: { placementId: id, ...remarkData, filledById: session.user.id, filledAt: now },
-            update: { ...remarkData, filledById: session.user.id, filledAt: now },
-          })
-        : await prisma.sameDayPlanningRemark.upsert({
-            where: { placementId: id },
-            create: { placementId: id, ...remarkData, filledById: session.user.id, filledAt: now },
-            update: { ...remarkData, filledById: session.user.id, filledAt: now },
-          });
+      const remarkCreate = {
+        placementId: id,
+        driverIssue: hasDI ? ((driverIssue as string | undefined) ?? null) : null,
+        maintenanceIssue: hasMI ? ((maintenanceIssue as string | undefined) ?? null) : null,
+        filledById: session.user.id, filledAt: now,
+      };
+
+      if (section === "d1") {
+        await prisma.d1PlanningRemark.upsert({ where: { placementId: id }, create: remarkCreate, update: remarkUpdate });
+      } else {
+        await prisma.sameDayPlanningRemark.upsert({ where: { placementId: id }, create: remarkCreate, update: remarkUpdate });
+      }
 
       const issueSource: IssueSource = section === "d1" ? "D1" : "SAME_DAY";
-      if (driverIssue && driverIssue !== "NO_ISSUE") {
-        await raiseIssue(id, "DRIVER", driverIssue as string, session.user.id, ["DRIVER_MANAGEMENT"], [], issueSource);
+
+      if (hasDI) {
+        if (!driverIssue || driverIssue === "NO_ISSUE") {
+          await prisma.issueAlert.updateMany({
+            where: { placementId: id, issueCategory: "DRIVER", source: issueSource, status: { in: ["OPEN", "IN_PROGRESS"] } },
+            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — No Issue selected" },
+          });
+        } else {
+          await raiseIssue(id, "DRIVER", driverIssue as string, session.user.id, ["DRIVER_MANAGEMENT"], [], issueSource);
+        }
       }
-      if (maintenanceIssue && maintenanceIssue !== "NO_ISSUE") {
-        if (maintenanceIssue === "TYRE_AND_ALIGNMENT") {
-          // Tyre & Alignment → Gaurav (Store & Tyre). EQUIPMENT category so Gaurav can see it in his issues list.
+
+      if (hasMI) {
+        if (!maintenanceIssue || maintenanceIssue === "NO_ISSUE") {
+          await prisma.issueAlert.updateMany({
+            where: { placementId: id, issueCategory: { in: ["MAINTENANCE", "EQUIPMENT"] }, source: issueSource, status: { in: ["OPEN", "IN_PROGRESS"] } },
+            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — No Issue selected" },
+          });
+        } else if (maintenanceIssue === "TYRE_AND_ALIGNMENT") {
           await raiseIssue(id, "EQUIPMENT", maintenanceIssue as string, session.user.id, ["STORE_AND_TYRE"], [], issueSource);
         } else {
           await raiseIssue(id, "MAINTENANCE", maintenanceIssue as string, session.user.id, ["MAINTENANCE_TEAM"], [], issueSource);
@@ -157,7 +192,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         placementId: id,
       });
 
-      return NextResponse.json(result);
+      return NextResponse.json(await getUpdatedPlacement(id));
     }
 
     if (section === "placementTeam") {
@@ -170,27 +205,81 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (!placement) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
       const { elockStatus, idfyDrivers, cargoNet, tirpal, stepney } = data;
-      const ptData = {
-        elockStatus: (elockStatus as string | undefined) ?? null,
-        idfyDrivers: (idfyDrivers as string | undefined) ?? null,
-        cargoNet: (cargoNet as string | undefined) ?? null,
-        tirpal: (tirpal as string | undefined) ?? null,
-        stepney: (stepney as string | undefined) ?? null,
-      };
-      const result = await prisma.placementTeamRemark.upsert({
-        where: { placementId: id },
-        create: { placementId: id, ...ptData, filledById: session.user.id, filledAt: now },
-        update: { ...ptData, filledById: session.user.id, filledAt: now },
-      });
+      const hasElock = "elockStatus" in data;
+      const hasIdfy = "idfyDrivers" in data;
+      const hasCargo = "cargoNet" in data;
+      const hasTirpal = "tirpal" in data;
+      const hasStepney = "stepney" in data;
 
-      if (elockStatus === "UNHEALTHY" || elockStatus === "LOCK_DAMAGE") {
-        await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["E_LOCK_TEAM"], ["mohit@fleet.com"], "PLACEMENT_TEAM");
+      const ptUpdate = {
+        filledById: session.user.id, filledAt: now,
+        ...(hasElock ? { elockStatus: (elockStatus as string | undefined) ?? null } : {}),
+        ...(hasIdfy ? { idfyDrivers: (idfyDrivers as string | undefined) ?? null } : {}),
+        ...(hasCargo ? { cargoNet: (cargoNet as string | undefined) ?? null } : {}),
+        ...(hasTirpal ? { tirpal: (tirpal as string | undefined) ?? null } : {}),
+        ...(hasStepney ? { stepney: (stepney as string | undefined) ?? null } : {}),
+      };
+      const ptCreate = {
+        placementId: id,
+        elockStatus: hasElock ? ((elockStatus as string | undefined) ?? null) : null,
+        idfyDrivers: hasIdfy ? ((idfyDrivers as string | undefined) ?? null) : null,
+        cargoNet: hasCargo ? ((cargoNet as string | undefined) ?? null) : null,
+        tirpal: hasTirpal ? ((tirpal as string | undefined) ?? null) : null,
+        stepney: hasStepney ? ((stepney as string | undefined) ?? null) : null,
+        filledById: session.user.id, filledAt: now,
+      };
+
+      await prisma.placementTeamRemark.upsert({ where: { placementId: id }, create: ptCreate, update: ptUpdate });
+
+      if (hasElock) {
+        if (elockStatus === "UNHEALTHY" || elockStatus === "LOCK_DAMAGE") {
+          await raiseIssue(id, "EQUIPMENT", elockStatus as string, session.user.id, ["E_LOCK_TEAM"], ["mohit@fleet.com"], "PLACEMENT_TEAM");
+        } else {
+          await prisma.issueAlert.updateMany({
+            where: { placementId: id, issueValue: { in: ["UNHEALTHY", "LOCK_DAMAGE"] }, source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
+            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          });
+        }
       }
-      if (cargoNet === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"], "PLACEMENT_TEAM");
-      if (tirpal === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"], "PLACEMENT_TEAM");
-      if (stepney === "NOT_AVAILABLE") await raiseIssue(id, "EQUIPMENT", "STEPNEY", session.user.id, ["STORE_AND_TYRE"], [], "PLACEMENT_TEAM");
-      if (idfyDrivers === "REQUIRED_NOT_AVAILABLE") {
-        await raiseIssue(id, "DRIVER", "IDFY_NOT_AVAILABLE", session.user.id, ["DRIVER_MANAGEMENT"], [], "PLACEMENT_TEAM");
+      if (hasCargo) {
+        if (cargoNet === "NOT_AVAILABLE") {
+          await raiseIssue(id, "EQUIPMENT", "CARGO_NET", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"], "PLACEMENT_TEAM");
+        } else {
+          await prisma.issueAlert.updateMany({
+            where: { placementId: id, issueValue: "CARGO_NET", source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
+            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          });
+        }
+      }
+      if (hasTirpal) {
+        if (tirpal === "NOT_AVAILABLE") {
+          await raiseIssue(id, "EQUIPMENT", "TIRPAL", session.user.id, ["STORE_AND_TYRE"], ["mohit@fleet.com", "shahid@fleet.com"], "PLACEMENT_TEAM");
+        } else {
+          await prisma.issueAlert.updateMany({
+            where: { placementId: id, issueValue: "TIRPAL", source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
+            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          });
+        }
+      }
+      if (hasStepney) {
+        if (stepney === "NOT_AVAILABLE") {
+          await raiseIssue(id, "EQUIPMENT", "STEPNEY", session.user.id, ["STORE_AND_TYRE"], [], "PLACEMENT_TEAM");
+        } else {
+          await prisma.issueAlert.updateMany({
+            where: { placementId: id, issueValue: "STEPNEY", source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
+            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          });
+        }
+      }
+      if (hasIdfy) {
+        if (idfyDrivers === "REQUIRED_NOT_AVAILABLE") {
+          await raiseIssue(id, "DRIVER", "IDFY_NOT_AVAILABLE", session.user.id, ["DRIVER_MANAGEMENT"], [], "PLACEMENT_TEAM");
+        } else {
+          await prisma.issueAlert.updateMany({
+            where: { placementId: id, issueValue: "IDFY_NOT_AVAILABLE", source: "PLACEMENT_TEAM", status: { in: ["OPEN", "IN_PROGRESS"] } },
+            data: { status: "RESOLVED", resolvedById: session.user.id, resolvedAt: now, resolutionNote: "Cleared — field reset" },
+          });
+        }
       }
 
       await logAudit({
@@ -203,7 +292,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         placementId: id,
       });
 
-      return NextResponse.json(result);
+      return NextResponse.json(await getUpdatedPlacement(id));
     }
 
     if (section === "finalStatus") {
