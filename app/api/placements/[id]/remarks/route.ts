@@ -125,7 +125,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const now = new Date();
 
     if (section === "d1" || section === "sameDay") {
-      if (role !== "PLANNING_TEAM" && role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (role !== "PLANNING_TEAM" && role !== "PLACEMENT_TEAM" && role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
       const placement = await prisma.placement.findUnique({
         where: { id },
@@ -194,7 +194,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     if (section === "placementTeam") {
-      if (role !== "PLACEMENT_TEAM" && role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (role !== "PLACEMENT_TEAM" && role !== "PLANNING_TEAM" && role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
       const placement = await prisma.placement.findUnique({
         where: { id },
@@ -289,7 +289,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     if (section === "finalStatus") {
-      if (role !== "PLACEMENT_TEAM" && role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (role !== "PLACEMENT_TEAM" && role !== "PLANNING_TEAM" && role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
       const current = await prisma.placement.findUnique({
         where: { id },
@@ -331,7 +331,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     if (section === "vehicleSwap") {
-      if (role !== "PLACEMENT_TEAM" && role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (role !== "PLACEMENT_TEAM" && role !== "PLANNING_TEAM" && role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
       const { vehicleId } = data;
       const current = await prisma.placement.findUnique({

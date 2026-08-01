@@ -98,8 +98,8 @@ function IssueChip({ value, resolved }: { value: string; resolved?: boolean }) {
   );
 }
 
-const canPlan = (r: Role) => r === "PLANNING_TEAM" || r === "ADMIN";
-const canPlace = (r: Role) => r === "PLACEMENT_TEAM" || r === "ADMIN";
+const canPlan = (r: Role) => r === "PLANNING_TEAM" || r === "PLACEMENT_TEAM" || r === "ADMIN";
+const canPlace = (r: Role) => r === "PLACEMENT_TEAM" || r === "PLANNING_TEAM" || r === "ADMIN";
 
 const STATUS_COLOR: Record<string, string> = {
   PLACED: "bg-emerald-100 text-emerald-800 border-emerald-200",

@@ -73,7 +73,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
               <p className="text-sm text-slate-500 mt-0.5">{ROLE_LABELS[session?.user.role ?? ""] ?? session?.user.role}</p>
             </div>
           </div>
-          {session?.user.role === "PLANNING_TEAM" && (
+          {(session?.user.role === "PLANNING_TEAM" || session?.user.role === "PLACEMENT_TEAM") && (
             <Link
               href="/placements/new"
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 active:scale-95 transition-all shadow-sm shadow-blue-200"
