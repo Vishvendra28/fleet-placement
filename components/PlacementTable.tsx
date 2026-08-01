@@ -81,6 +81,15 @@ const ISSUE_VALUE_LABELS: Record<string, string> = {
   IDFY_NOT_AVAILABLE: "IDFY Not Available",
 };
 
+const SWAP_REASONS = [
+  { value: "MAJOR_MAINTENANCE", label: "Major Maintenance" },
+  { value: "ACCIDENT", label: "Accident" },
+  { value: "DOCUMENT", label: "Document" },
+  { value: "IMPOUND", label: "Impound" },
+  { value: "WAIT_FOR_UNLOADING", label: "Wait for Unloading" },
+  { value: "OTHERS", label: "Others" },
+];
+
 function IssueChip({ value, resolved }: { value: string; resolved?: boolean }) {
   if (resolved) {
     return (
@@ -199,6 +208,9 @@ export default function PlacementTable({
   const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
   const [swappingId, setSwappingId] = useState<string | null>(null);
   const [swapVehicles, setSwapVehicles] = useState<VehicleOption[]>([]);
+  const [swapSearch, setSwapSearch] = useState("");
+  const [swapReason, setSwapReason] = useState("");
+  const [pendingSwapVehicleId, setPendingSwapVehicleId] = useState("");
   const [statusError, setStatusError] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -309,7 +321,17 @@ export default function PlacementTable({
     if (!res.ok) return;
     const all: VehicleOption[] = await res.json();
     setSwapVehicles(all.filter((v) => v.id !== p.vehicle?.id));
+    setSwapSearch("");
+    setSwapReason("");
+    setPendingSwapVehicleId("");
     setSwappingId(p.id);
+  }
+
+  function cancelSwap() {
+    setSwappingId(null);
+    setSwapSearch("");
+    setSwapReason("");
+    setPendingSwapVehicleId("");
   }
 
   async function deleteTrip(id: string) {
@@ -322,19 +344,24 @@ export default function PlacementTable({
     setDeleteConfirmId(null);
   }
 
-  async function doVehicleSwap(placementId: string, vehicleId: string) {
-    if (!vehicleId) return;
-    setSwappingId(null);
+  async function doVehicleSwap(placementId: string, vehicleId: string, reason: string) {
+    if (!vehicleId || !reason) return;
+    cancelSwap();
     setPlacements((prev) => prev.map((p) => {
       if (p.id !== placementId) return p;
       const found = swapVehicles.find((v) => v.id === vehicleId);
       return { ...p, vehicle: found ? { id: found.id, vehicleNumber: found.vehicleNumber } : p.vehicle };
     }));
-    await fetch(`/api/placements/${placementId}/remarks`, {
+    const res = await fetch(`/api/placements/${placementId}/remarks`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ section: "vehicleSwap", data: { vehicleId } }),
+      body: JSON.stringify({ section: "vehicleSwap", data: { vehicleId, swapReason: reason } }),
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error ?? "Swap failed. Please try again.");
+      fetchPlacements(true);
+    }
   }
 
   const editPlan = canPlan(userRole);
@@ -718,17 +745,41 @@ export default function PlacementTable({
                         <div className="flex items-center gap-1.5">
                           <span className="text-slate-400">Vehicle</span>
                           {swappingId === p.id ? (
-                            <div className="flex items-center gap-1">
-                              <select
-                                defaultValue=""
+                            <div className="flex flex-col gap-1.5 mt-0.5">
+                              <input
+                                type="text"
+                                placeholder="Search vehicle…"
+                                value={swapSearch}
                                 autoFocus
-                                onChange={(e) => { if (e.target.value) doVehicleSwap(p.id, e.target.value); }}
-                                className="text-xs border border-blue-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none max-w-[110px]"
+                                onChange={(e) => setSwapSearch(e.target.value)}
+                                className="text-xs border border-blue-300 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-full"
+                              />
+                              <select
+                                value={pendingSwapVehicleId}
+                                onChange={(e) => setPendingSwapVehicleId(e.target.value)}
+                                className="text-xs border border-blue-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-full"
                               >
-                                <option value="" disabled>Pick…</option>
-                                {swapVehicles.map((v) => <option key={v.id} value={v.id}>{v.vehicleNumber}</option>)}
+                                <option value="" disabled>Pick vehicle…</option>
+                                {swapVehicles.filter((v) => !swapSearch || v.vehicleNumber.toLowerCase().includes(swapSearch.toLowerCase())).map((v) => (
+                                  <option key={v.id} value={v.id}>{v.vehicleNumber}</option>
+                                ))}
                               </select>
-                              <button onClick={() => setSwappingId(null)} className="text-slate-400 hover:text-slate-600 px-1">✕</button>
+                              <select
+                                value={swapReason}
+                                onChange={(e) => setSwapReason(e.target.value)}
+                                className="text-xs border border-blue-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-full"
+                              >
+                                <option value="" disabled>Reason…</option>
+                                {SWAP_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                              </select>
+                              <div className="flex gap-1">
+                                <button
+                                  disabled={!pendingSwapVehicleId || !swapReason}
+                                  onClick={() => doVehicleSwap(p.id, pendingSwapVehicleId, swapReason)}
+                                  className="text-xs px-2.5 py-1 bg-blue-600 text-white rounded-lg font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
+                                >Confirm</button>
+                                <button onClick={cancelSwap} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
+                              </div>
                             </div>
                           ) : (
                             <div className="flex items-center gap-1">
@@ -935,23 +986,41 @@ export default function PlacementTable({
                       {/* Vehicle column with swap */}
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         {swappingId === p.id ? (
-                          <div className="flex items-center gap-1">
-                            <select
-                              defaultValue=""
+                          <div className="flex flex-col gap-1.5 min-w-[160px]">
+                            <input
+                              type="text"
+                              placeholder="Search…"
+                              value={swapSearch}
                               autoFocus
-                              onChange={(e) => { if (e.target.value) doVehicleSwap(p.id, e.target.value); }}
-                              className="text-xs border border-blue-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 max-w-[120px]"
+                              onChange={(e) => setSwapSearch(e.target.value)}
+                              className="text-xs border border-blue-300 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-full"
+                            />
+                            <select
+                              value={pendingSwapVehicleId}
+                              onChange={(e) => setPendingSwapVehicleId(e.target.value)}
+                              className="text-xs border border-blue-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-full"
                             >
-                              <option value="" disabled>Select…</option>
-                              {swapVehicles.map((v) => (
+                              <option value="" disabled>Pick vehicle…</option>
+                              {swapVehicles.filter((v) => !swapSearch || v.vehicleNumber.toLowerCase().includes(swapSearch.toLowerCase())).map((v) => (
                                 <option key={v.id} value={v.id}>{v.vehicleNumber}</option>
                               ))}
                             </select>
-                            <button
-                              onClick={() => setSwappingId(null)}
-                              className="text-slate-400 hover:text-slate-600 text-xs px-1"
-                              title="Cancel"
-                            >✕</button>
+                            <select
+                              value={swapReason}
+                              onChange={(e) => setSwapReason(e.target.value)}
+                              className="text-xs border border-blue-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-blue-400 w-full"
+                            >
+                              <option value="" disabled>Reason…</option>
+                              {SWAP_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                            </select>
+                            <div className="flex gap-1">
+                              <button
+                                disabled={!pendingSwapVehicleId || !swapReason}
+                                onClick={() => doVehicleSwap(p.id, pendingSwapVehicleId, swapReason)}
+                                className="text-xs px-2.5 py-1 bg-blue-600 text-white rounded-lg font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
+                              >Confirm</button>
+                              <button onClick={cancelSwap} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
+                            </div>
                           </div>
                         ) : (
                           <div className="flex items-center gap-1.5">

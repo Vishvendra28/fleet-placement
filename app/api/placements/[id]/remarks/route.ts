@@ -6,7 +6,7 @@ import { FinalStatus, IssueCategory, IssueSource } from "@prisma/client";
 import { ISSUE_VALUE_LABELS } from "@/lib/constants";
 import { logAudit } from "@/lib/audit";
 import { apiError } from "@/lib/api-error";
-import { sendPushToRolesAndEmails } from "@/lib/push";
+import { sendPushToRolesAndEmails, sendPushToUsers } from "@/lib/push";
 
 async function raiseIssue(
   placementId: string,
@@ -333,10 +333,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (section === "vehicleSwap") {
       if (role !== "PLACEMENT_TEAM" && role !== "PLANNING_TEAM" && role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-      const { vehicleId } = data;
+      const VALID_SWAP_REASONS = ["MAJOR_MAINTENANCE", "ACCIDENT", "DOCUMENT", "IMPOUND", "WAIT_FOR_UNLOADING", "OTHERS"] as const;
+      const SWAP_REASON_LABELS: Record<string, string> = {
+        MAJOR_MAINTENANCE: "Major Maintenance", ACCIDENT: "Accident", DOCUMENT: "Document",
+        IMPOUND: "Impound", WAIT_FOR_UNLOADING: "Wait for Unloading", OTHERS: "Others",
+      };
+
+      const { vehicleId, swapReason } = data;
+      if (!swapReason || !VALID_SWAP_REASONS.includes(swapReason as typeof VALID_SWAP_REASONS[number])) {
+        return NextResponse.json({ error: "A swap reason is required." }, { status: 400 });
+      }
+
       const current = await prisma.placement.findUnique({
         where: { id },
-        include: { client: true, route: true, vehicle: true },
+        include: { client: { include: { kam: { select: { id: true } } } }, route: true, vehicle: true },
       });
       if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -369,34 +379,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         data: { vehicleId: (vehicleId as string) || null },
       });
 
-      // Bug 8 fix: vehicle-specific issues are no longer relevant after a swap.
-      // Auto-resolve open MAINTENANCE and EQUIPMENT issues so teams aren't chasing problems on a vehicle that's gone.
-      if (current.vehicleId !== (vehicleId || null)) {
-        await prisma.issueAlert.updateMany({
-          where: {
-            placementId: id,
-            issueCategory: { in: ["MAINTENANCE", "EQUIPMENT"] },
-            status: { in: ["OPEN", "IN_PROGRESS"] },
-          },
-          data: {
-            status: "RESOLVED",
-            resolvedById: session.user.id,
-            resolvedAt: now,
-            resolutionNote: `Auto-resolved: vehicle swapped from ${current.vehicle?.vehicleNumber ?? "none"} to ${newVehicle?.vehicleNumber ?? "none"}`,
-          },
-        });
-      }
+      const reasonLabel = SWAP_REASON_LABELS[swapReason as string] ?? swapReason;
+      const placementTimeIST = new Date(current.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
 
       await logAudit({
         userId: session.user.id,
         action: "UPDATED",
         entity: "PLACEMENT",
         entityId: id,
-        description: `${session.user.name} swapped vehicle: ${current.vehicle?.vehicleNumber ?? "none"} → ${newVehicle?.vehicleNumber ?? "none"} for ${current.client.name} — ${current.route.name}`,
+        description: `${session.user.name} swapped vehicle: ${current.vehicle?.vehicleNumber ?? "none"} → ${newVehicle?.vehicleNumber ?? "none"} for ${current.client.name} — ${current.route.name}. Reason: ${reasonLabel}`,
         oldValue: { vehicleNumber: current.vehicle?.vehicleNumber ?? null },
-        newValue: { vehicleNumber: newVehicle?.vehicleNumber ?? null },
+        newValue: { vehicleNumber: newVehicle?.vehicleNumber ?? null, swapReason: reasonLabel },
         placementId: id,
       });
+
+      // Notify the KAM assigned to this client
+      if (current.client.kam?.id) {
+        await sendPushToUsers([current.client.kam.id], {
+          title: `Vehicle Swapped — ${current.client.name}`,
+          body: `${current.route.name} at ${placementTimeIST}: ${current.vehicle?.vehicleNumber ?? "?"} → ${newVehicle?.vehicleNumber ?? "?"}. Reason: ${reasonLabel}. By ${session.user.name}.`,
+          url: "/dashboard",
+          tag: `swap-${id}`,
+        });
+      }
 
       return NextResponse.json(result);
     }
