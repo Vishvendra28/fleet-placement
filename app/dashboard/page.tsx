@@ -28,7 +28,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
   const placementSelect = {
     id: true, date: true, cohort: true, laneType: true, placementTime: true,
-    finalStatus: true, compliance: true, driverNumber1: true, driverNumber2: true,
+    finalStatus: true, compliance: true,
+    driverName1: true, driverNumber1: true, driverName2: true, driverNumber2: true,
+    eta: true, statusComment: true, elockComment: true, referenceId: true,
     client: { select: { name: true } },
     route: { select: { name: true } },
     vehicle: { select: { id: true, vehicleNumber: true } },

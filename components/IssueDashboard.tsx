@@ -71,6 +71,7 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<IssueStatus | null>(null);
+  const [clientFilter, setClientFilter] = useState("");
   const [vehicleFilter, setVehicleFilter] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
   const [activeForms, setActiveForms] = useState<Record<string, ActiveForm>>({});
@@ -155,12 +156,14 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
     (a, b) => new Date(a.placement.date).getTime() - new Date(b.placement.date).getTime()
   );
 
+  const allClients = [...new Set(issues.map(i => i.placement.client.name))].sort();
   const allVehicles = [...new Set(
     issues.map(i => i.placement.vehicle?.vehicleNumber).filter(Boolean) as string[]
   )].sort();
   const allRoutes = [...new Set(issues.map(i => i.placement.route.name))].sort();
 
   const displayed = sortedIssues.filter(i => {
+    if (clientFilter && i.placement.client.name !== clientFilter) return false;
     if (vehicleFilter && i.placement.vehicle?.vehicleNumber !== vehicleFilter) return false;
     if (routeFilter && i.placement.route.name !== routeFilter) return false;
     return true;
@@ -181,7 +184,7 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
     { value: "RESOLVED" as IssueStatus,    label: "Resolved",    count: resolvedCount,     base: "border-emerald-200 bg-gradient-to-br from-emerald-50 to-white text-emerald-700", ring: "ring-2 ring-emerald-400 ring-offset-1", Icon: CheckIcon },
   ];
 
-  const anyFilterActive = !!(date || vehicleFilter || routeFilter || statusFilter);
+  const anyFilterActive = !!(date || clientFilter || vehicleFilter || routeFilter || statusFilter);
 
   return (
     <div>
@@ -201,6 +204,19 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
         </div>
 
         <div className="w-px h-5 bg-slate-200" />
+
+        {/* Client filter */}
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Client</label>
+          <select
+            value={clientFilter}
+            onChange={e => setClientFilter(e.target.value)}
+            className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm min-w-[140px]"
+          >
+            <option value="">All clients</option>
+            {allClients.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
 
         {/* Vehicle filter */}
         <div className="flex items-center gap-2">
@@ -230,7 +246,7 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
 
         {anyFilterActive && (
           <button
-            onClick={() => { setDate(""); setVehicleFilter(""); setRouteFilter(""); setStatusFilter(null); }}
+            onClick={() => { setDate(""); setClientFilter(""); setVehicleFilter(""); setRouteFilter(""); setStatusFilter(null); }}
             className="text-xs text-slate-400 hover:text-slate-600 underline transition-colors"
           >
             Clear all filters

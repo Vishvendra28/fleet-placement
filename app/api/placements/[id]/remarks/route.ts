@@ -102,7 +102,8 @@ async function getUpdatedPlacement(id: string) {
     where: { id },
     select: {
       id: true, date: true, cohort: true, laneType: true, placementTime: true, finalStatus: true,
-      compliance: true, driverNumber1: true, driverNumber2: true,
+      compliance: true, driverName1: true, driverNumber1: true, driverName2: true, driverNumber2: true,
+      eta: true, statusComment: true, elockComment: true, referenceId: true,
       client: { select: { name: true } },
       route: { select: { name: true } },
       vehicle: { select: { id: true, vehicleNumber: true } },
@@ -202,8 +203,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       });
       if (!placement) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-      const { elockStatus, idfyDrivers, cargoNet, tirpal, stepney } = data;
+      const { elockStatus, idfyDrivers, cargoNet, tirpal, stepney, elockComment } = data;
       const hasElock = "elockStatus" in data;
+      const hasElockComment = "elockComment" in data;
       const hasIdfy = "idfyDrivers" in data;
       const hasCargo = "cargoNet" in data;
       const hasTirpal = "tirpal" in data;
@@ -228,6 +230,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       };
 
       await prisma.placementTeamRemark.upsert({ where: { placementId: id }, create: ptCreate, update: ptUpdate });
+
+      if (hasElockComment) {
+        await prisma.placement.update({
+          where: { id },
+          data: { elockComment: (elockComment as string | null) ?? null },
+        });
+      }
 
       if (hasElock) {
         if (elockStatus === "UNHEALTHY" || elockStatus === "LOCK_DAMAGE") {
@@ -297,7 +306,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       });
       if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-      const VALID_STATUSES: FinalStatus[] = ["PLACED", "PENDING", "NOT_PLACED"];
+      const VALID_STATUSES: FinalStatus[] = ["PLACED", "PENDING", "NOT_PLACED", "ARRIVING", "WAIT_FOR_UNLOADING"];
       if (!VALID_STATUSES.includes(data.finalStatus as FinalStatus)) {
         return NextResponse.json({ error: "Invalid status value." }, { status: 400 });
       }
@@ -314,20 +323,30 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         }
       }
 
-      const result = await prisma.placement.update({ where: { id }, data: { finalStatus: data.finalStatus as FinalStatus } });
+      const etaValue = data.eta ? new Date(data.eta as string) : null;
+      const statusCommentValue = (data.statusComment as string | null) ?? null;
+
+      await prisma.placement.update({
+        where: { id },
+        data: {
+          finalStatus: data.finalStatus as FinalStatus,
+          eta: etaValue,
+          statusComment: statusCommentValue,
+        },
+      });
 
       await logAudit({
         userId: session.user.id,
         action: "STATUS_CHANGED",
         entity: "PLACEMENT",
         entityId: id,
-        description: `${session.user.name} changed status of ${current.client.name} (${current.vehicle?.vehicleNumber ?? ""}) ${current.finalStatus}→${data.finalStatus}`,
+        description: `${session.user.name} changed status of ${current.client.name} (${current.vehicle?.vehicleNumber ?? ""}) ${current.finalStatus}→${data.finalStatus}${statusCommentValue ? `. Comment: ${statusCommentValue}` : ""}`,
         oldValue: { finalStatus: current.finalStatus },
-        newValue: { finalStatus: data.finalStatus },
+        newValue: { finalStatus: data.finalStatus, eta: data.eta, statusComment: statusCommentValue },
         placementId: id,
       });
 
-      return NextResponse.json(result);
+      return NextResponse.json(await getUpdatedPlacement(id));
     }
 
     if (section === "vehicleSwap") {

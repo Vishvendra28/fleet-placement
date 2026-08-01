@@ -16,6 +16,7 @@ type TripInput = {
   driverNumber1?: string;
   driverName2?: string;
   driverNumber2?: string;
+  referenceId?: string;
 };
 
 export async function POST(req: NextRequest) {
@@ -59,17 +60,6 @@ export async function POST(req: NextRequest) {
             );
           }
 
-          const dupeTrip = await tx.placement.findFirst({
-            where: { clientId: trip.clientId, routeId: trip.routeId, laneType: trip.laneType, date: { gte: dateObj, lt: nextDay } },
-            include: { vehicle: { select: { vehicleNumber: true } } },
-          });
-          if (dupeTrip) {
-            throw Object.assign(
-              new Error(`Trip ${tripNum}: A ${trip.laneType} trip already exists for this client/route on this date (vehicle: ${dupeTrip.vehicle?.vehicleNumber ?? "unassigned"}).`),
-              { status: 409 }
-            );
-          }
-
           const masterRoute = await tx.masterRoute.findFirst({
             where: { clientId: trip.clientId, routeId: trip.routeId, isActive: true },
             select: { compliance: true, placementTime: true },
@@ -106,6 +96,7 @@ export async function POST(req: NextRequest) {
               driverNumber1: trip.driverNumber1?.trim() || null,
               driverName2: trip.driverName2?.trim() || null,
               driverNumber2: trip.driverNumber2?.trim() || null,
+              referenceId: trip.referenceId?.trim() || null,
               createdById: session.user.id,
             },
             select: {

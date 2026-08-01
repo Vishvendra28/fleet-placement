@@ -19,6 +19,8 @@ export const ELOCK_STATUS_LABELS: Record<string, string> = {
   HEALTHY: "Healthy",
   UNHEALTHY: "Unhealthy",
   LOCK_DAMAGE: "Lock Damage",
+  NOT_CHECKED: "Not Checked",
+  CENTRAL_LOCK: "Central Lock",
 };
 
 export const IDFY_STATUS_LABELS: Record<string, string> = {
@@ -36,6 +38,8 @@ export const FINAL_STATUS_LABELS: Record<string, string> = {
   PLACED: "Placed",
   PENDING: "Pending",
   NOT_PLACED: "Not Placed",
+  ARRIVING: "Arriving",
+  WAIT_FOR_UNLOADING: "Wait for Unloading",
 };
 
 export const LANE_TYPE_LABELS: Record<string, string> = {

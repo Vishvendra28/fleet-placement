@@ -22,24 +22,27 @@ type Row = {
   driverNumber2: string;
   placementTimeOverride: string;
   vendorName: string;
+  referenceId: string;
 };
 
 const emptyRow = (): Row => ({
   clientId: "", routeId: "", newRouteName: "", newRouteOrigin: "", newRouteDestination: "",
   cohort: "", laneType: "FW", vehicleId: "",
   driverName1: "", driverNumber1: "", driverName2: "", driverNumber2: "",
-  placementTimeOverride: "", vendorName: "",
+  placementTimeOverride: "", vendorName: "", referenceId: "",
 });
 
 export default function NewPlacementForm({
-  clients, vehicles,
+  clients, vehicles: initialVehicles,
 }: {
   clients: Client[]; vehicles: Vehicle[];
 }) {
   const router = useRouter();
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0];
+  const [date, setDate] = useState(tomorrow);
   const [rows, setRows] = useState<Row[]>([emptyRow()]);
   const [clientRoutes, setClientRoutes] = useState<Record<number, Route[]>>({});
+  const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [vehicleSearches, setVehicleSearches] = useState<string[]>([""]);
@@ -63,6 +66,33 @@ export default function NewPlacementForm({
       setClientRoutes((prev) => ({ ...prev, [i]: routes }));
     }
   }, []);
+
+  async function addNewVehicle(i: number, vehicleNumber: string) {
+    const res = await fetch("/api/vehicles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ vehicleNumber }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error || "Failed to add vehicle.");
+      return;
+    }
+    const newV: Vehicle = await res.json();
+    setVehicles(prev => [...prev, newV].sort((a, b) => a.vehicleNumber.localeCompare(b.vehicleNumber)));
+    setField(i, "vehicleId", newV.id);
+    setVehicleSearch(i, "");
+  }
+
+  function swapRoute(i: number, currentRouteId: string, targetLane: "FW" | "RET", routes: Route[]) {
+    const current = routes.find(r => r.id === currentRouteId);
+    if (!current) return;
+    const parts = current.name.split("-");
+    if (parts.length < 2) return;
+    const reversed = [...parts].reverse().join("-");
+    const swapped = routes.find(r => r.name === reversed);
+    if (swapped) setField(i, "routeId", swapped.id);
+  }
 
   const lookupMaster = useCallback(async (i: number, clientId: string, routeId: string) => {
     if (!clientId || !routeId || routeId === "__new__") return;
@@ -129,6 +159,7 @@ export default function NewPlacementForm({
             driverNumber1: row.driverNumber1,
             driverName2: row.driverName2,
             driverNumber2: row.driverNumber2,
+            referenceId: row.referenceId || undefined,
           })),
         }),
       });
@@ -239,7 +270,13 @@ export default function NewPlacementForm({
 
                 <div>
                   <label className="text-xs font-medium text-gray-500 mb-1 block">Lane Type *</label>
-                  <select value={row.laneType} onChange={(e) => setField(i, "laneType", e.target.value as "FW" | "RET")} className={inputCls}>
+                  <select value={row.laneType} onChange={(e) => {
+                    const newLane = e.target.value as "FW" | "RET";
+                    setField(i, "laneType", newLane);
+                    if (row.routeId && row.routeId !== "__new__") {
+                      swapRoute(i, row.routeId, newLane, clientRoutes[i] ?? []);
+                    }
+                  }} className={inputCls}>
                     <option value="FW">Forward (FW)</option>
                     <option value="RET">Return (RET)</option>
                   </select>
@@ -279,18 +316,34 @@ export default function NewPlacementForm({
                     placeholder="Search vehicle number…"
                     className={inputCls}
                   />
-                  <select
-                    value={row.vehicleId}
-                    onChange={(e) => { setField(i, "vehicleId", e.target.value); setVehicleSearch(i, ""); }}
-                    className={`${inputCls} mt-1`}
-                    required
-                    size={vehicleSearches[i] ? Math.min(6, vehicles.filter(v => v.vehicleNumber.toUpperCase().includes((vehicleSearches[i] ?? "").toUpperCase())).length + 1) : 1}
-                  >
-                    <option value="">Select vehicle</option>
-                    {vehicles
-                      .filter(v => v.vehicleNumber.toUpperCase().includes((vehicleSearches[i] ?? "").toUpperCase()))
-                      .map((v) => <option key={v.id} value={v.id}>{v.vehicleNumber}</option>)}
-                  </select>
+                  {(() => {
+                    const search = (vehicleSearches[i] ?? "").toUpperCase();
+                    const filtered = vehicles.filter(v => v.vehicleNumber.toUpperCase().includes(search));
+                    const exactMatch = vehicles.some(v => v.vehicleNumber.toUpperCase() === search);
+                    return (
+                      <>
+                        <select
+                          value={row.vehicleId}
+                          onChange={(e) => { setField(i, "vehicleId", e.target.value); setVehicleSearch(i, ""); }}
+                          className={`${inputCls} mt-1`}
+                          required
+                          size={search ? Math.min(6, filtered.length + 1) : 1}
+                        >
+                          <option value="">Select vehicle</option>
+                          {filtered.map((v) => <option key={v.id} value={v.id}>{v.vehicleNumber}</option>)}
+                        </select>
+                        {search && !exactMatch && (
+                          <button
+                            type="button"
+                            onClick={() => addNewVehicle(i, search)}
+                            className="mt-1 w-full text-xs text-blue-600 border border-blue-200 bg-blue-50 rounded-lg px-2.5 py-1.5 hover:bg-blue-100 transition-colors font-medium text-left"
+                          >
+                            + Add &quot;{search}&quot; to fleet
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Driver 1</p>
@@ -315,6 +368,20 @@ export default function NewPlacementForm({
                   </div>
                 </div>
               </div>
+
+              {/* VRID — only for AMZ */}
+              {clients.find(c => c.id === row.clientId)?.name?.toUpperCase().includes("AMZ") && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <label className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1 block">Reference ID (VRID)</label>
+                  <input
+                    type="text"
+                    value={row.referenceId}
+                    onChange={(e) => setField(i, "referenceId", e.target.value)}
+                    placeholder="e.g. VRID-12345"
+                    className={inputCls}
+                  />
+                </div>
+              )}
             </div>
           );
         })}

@@ -28,6 +28,8 @@ enum FinalStatus {
   PLACED
   PENDING
   NOT_PLACED
+  ARRIVING
+  WAIT_FOR_UNLOADING
 }
 
 enum DriverIssue {
@@ -51,6 +53,8 @@ enum ELockStatus {
   HEALTHY
   UNHEALTHY
   LOCK_DAMAGE
+  NOT_CHECKED
+  CENTRAL_LOCK
 }
 
 enum IDFYStatus {
@@ -206,6 +210,10 @@ model Placement {
   driverNumber1 String?
   driverName2   String?
   driverNumber2 String?
+  eta           DateTime?
+  statusComment String?
+  elockComment  String?
+  referenceId   String?
   createdById   String
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

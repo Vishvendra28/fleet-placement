@@ -51,7 +51,10 @@ function CountdownBadge({ placementTime }: { placementTime: string }) {
 type Placement = {
   id: string; date: string; cohort: string; laneType: string; placementTime: string; finalStatus: string;
   compliance: string | null;
-  driverNumber1: string | null; driverNumber2: string | null;
+  driverName1: string | null; driverNumber1: string | null;
+  driverName2: string | null; driverNumber2: string | null;
+  eta: string | null; statusComment: string | null;
+  elockComment: string | null; referenceId: string | null;
   client: { name: string }; route: { name: string }; vehicle: { id: string; vehicleNumber: string } | null;
   d1Remark: { driverIssue?: string; maintenanceIssue?: string } | null;
   sameDayRemark: { driverIssue?: string; maintenanceIssue?: string } | null;
@@ -114,12 +117,16 @@ const STATUS_COLOR: Record<string, string> = {
   PLACED: "bg-emerald-100 text-emerald-800 border-emerald-200",
   PENDING: "bg-amber-100 text-amber-800 border-amber-200",
   NOT_PLACED: "bg-red-100 text-red-800 border-red-200",
+  ARRIVING: "bg-blue-100 text-blue-800 border-blue-200",
+  WAIT_FOR_UNLOADING: "bg-purple-100 text-purple-800 border-purple-200",
 };
 
 const ROW_BG: Record<string, string> = {
   PLACED: "bg-emerald-50/60 hover:bg-emerald-50",
   PENDING: "bg-amber-50/40 hover:bg-amber-50/80",
   NOT_PLACED: "bg-red-50/60 hover:bg-red-50",
+  ARRIVING: "bg-blue-50/40 hover:bg-blue-50/80",
+  WAIT_FOR_UNLOADING: "bg-purple-50/40 hover:bg-purple-50/80",
 };
 
 function Dropdown({ value, options, onChange, disabled }: {
@@ -214,6 +221,9 @@ export default function PlacementTable({
   const [statusError, setStatusError] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [pendingStatuses, setPendingStatuses] = useState<Record<string, string>>({});
+  const [statusForms, setStatusForms] = useState<Record<string, { eta: string; comment: string }>>({});
+  const [elockCommentForms, setElockCommentForms] = useState<Record<string, string>>({});
 
   const fetchPlacements = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -268,6 +278,14 @@ export default function PlacementTable({
 
   async function update(id: string, section: string, field: string, value: string) {
     const prevPlacement = placements.find((p) => p.id === id);
+    // Show elock comment form when NOT_CHECKED is selected
+    if (section === "placementTeam" && field === "elockStatus") {
+      if (value === "NOT_CHECKED") {
+        setElockCommentForms((prev) => ({ ...prev, [id]: prevPlacement?.elockComment ?? "" }));
+      } else {
+        setElockCommentForms((prev) => { const n = { ...prev }; delete n[id]; return n; });
+      }
+    }
     setPlacements((prev) => prev.map((p) => {
       if (p.id !== id) return p;
       if (section === "d1") return { ...p, d1Remark: { ...p.d1Remark, [field]: value || null } };
@@ -303,6 +321,11 @@ export default function PlacementTable({
       setTimeout(() => setStatusError((cur) => (cur === id ? null : cur)), 3000);
       return;
     }
+    if (value === "ARRIVING" || value === "WAIT_FOR_UNLOADING") {
+      setPendingStatuses((prev) => ({ ...prev, [id]: value }));
+      setStatusForms((prev) => ({ ...prev, [id]: { eta: "", comment: "" } }));
+      return;
+    }
     setPlacements((prev) => prev.map((p) => (p.id === id ? { ...p, finalStatus: value } : p)));
     const res = await fetch(`/api/placements/${id}/remarks`, {
       method: "PATCH",
@@ -313,7 +336,47 @@ export default function PlacementTable({
       setPlacements((prev) => prev.map((p) => (p.id === id ? { ...p, finalStatus: placement.finalStatus } : p)));
       setStatusError(id);
       setTimeout(() => setStatusError((cur) => (cur === id ? null : cur)), 3000);
+    } else {
+      const updated = await res.json().catch(() => null);
+      if (updated?.id) setPlacements((prev) => prev.map((p) => p.id === updated.id ? updated : p));
     }
+  }
+
+  async function submitStatusForm(id: string) {
+    const form = statusForms[id];
+    const status = pendingStatuses[id];
+    const placement = placements.find((p) => p.id === id);
+    if (!form || !status || !placement) return;
+    setPlacements((prev) => prev.map((p) => p.id === id ? { ...p, finalStatus: status, eta: form.eta || null, statusComment: form.comment || null } : p));
+    setPendingStatuses((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    setStatusForms((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    const res = await fetch(`/api/placements/${id}/remarks`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section: "finalStatus", data: { finalStatus: status, eta: form.eta || null, statusComment: form.comment || null } }),
+    });
+    if (!res.ok) {
+      setPlacements((prev) => prev.map((p) => p.id === id ? placement : p));
+    } else {
+      const updated = await res.json().catch(() => null);
+      if (updated?.id) setPlacements((prev) => prev.map((p) => p.id === updated.id ? updated : p));
+    }
+  }
+
+  function cancelStatusForm(id: string) {
+    setPendingStatuses((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    setStatusForms((prev) => { const n = { ...prev }; delete n[id]; return n; });
+  }
+
+  async function saveElockComment(id: string) {
+    const comment = elockCommentForms[id] ?? "";
+    setPlacements((prev) => prev.map((p) => p.id === id ? { ...p, elockComment: comment } : p));
+    setElockCommentForms((prev) => { const n = { ...prev }; delete n[id]; return n; });
+    await fetch(`/api/placements/${id}/remarks`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section: "placementTeam", data: { elockComment: comment } }),
+    });
   }
 
   async function startVehicleSwap(p: Placement) {
@@ -421,25 +484,48 @@ export default function PlacementTable({
   }
 
   function handleExportExcel() {
-    const headers = ["Date", "#", "Client", "Route", "Schedule", "Lane", "Vehicle", "Driver 1", "Driver 2"];
-    const rows = groups.flatMap((group) =>
-      group.items.map((p, i) => [
-        formatShortDate(group.date),
-        String(i + 1),
-        p.client.name,
-        p.route.name,
-        p.cohort,
-        LANE_TYPE_LABELS[p.laneType] ?? p.laneType,
-        p.vehicle?.vehicleNumber ?? "",
-        p.driverNumber1 ?? "",
-        p.driverNumber2 ?? "",
-      ])
-    );
     const escape = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     const cell = (v: string) => `<Cell><Data ss:Type="String">${escape(v)}</Data></Cell>`;
-    const xmlRows = [headers, ...rows]
-      .map((r) => `<Row>${r.map(cell).join("")}</Row>`)
-      .join("");
+
+    let headers: string[];
+    let rows: string[][];
+
+    if (isKAM) {
+      headers = ["Date", "Client", "Route", "Schedule", "Lane", "Vehicle", "Driver 1 Name", "Driver 1 No.", "Driver 2 Name", "Driver 2 No."];
+      rows = groups.flatMap((group) =>
+        group.items.map((p) => [
+          formatShortDate(group.date),
+          p.client.name,
+          p.route.name,
+          p.cohort,
+          LANE_TYPE_LABELS[p.laneType] ?? p.laneType,
+          p.vehicle?.vehicleNumber ?? "",
+          p.driverName1 ?? "",
+          p.driverNumber1 ?? "",
+          p.driverName2 ?? "",
+          p.driverNumber2 ?? "",
+        ])
+      );
+    } else {
+      headers = ["Date", "#", "Client", "Route", "Schedule", "Lane", "Vehicle", "Driver 1 Name", "Driver 1 No.", "Driver 2 Name", "Driver 2 No."];
+      rows = groups.flatMap((group) =>
+        group.items.map((p, i) => [
+          formatShortDate(group.date),
+          String(i + 1),
+          p.client.name,
+          p.route.name,
+          p.cohort,
+          LANE_TYPE_LABELS[p.laneType] ?? p.laneType,
+          p.vehicle?.vehicleNumber ?? "",
+          p.driverName1 ?? "",
+          p.driverNumber1 ?? "",
+          p.driverName2 ?? "",
+          p.driverNumber2 ?? "",
+        ])
+      );
+    }
+
+    const xmlRows = [headers, ...rows].map((r) => `<Row>${r.map(cell).join("")}</Row>`).join("");
     const xml = `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Worksheet ss:Name="Trips"><Table>${xmlRows}</Table></Worksheet></Workbook>`;
     const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -459,7 +545,7 @@ export default function PlacementTable({
       <div className="mb-5 flex flex-wrap items-center gap-3">
         {isKAM ? (
           <>
-            {/* KAM filters: Client, Date, Export Excel */}
+            {/* KAM filters: Client, Route, Date, Export Excel */}
             {uniqueClients.length > 1 && (
               <select
                 value={clientFilter}
@@ -468,6 +554,17 @@ export default function PlacementTable({
               >
                 <option value="">All Clients</option>
                 {uniqueClients.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            )}
+
+            {uniqueRoutes.length > 1 && (
+              <select
+                value={routeFilter}
+                onChange={(e) => setRouteFilter(e.target.value)}
+                className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              >
+                <option value="">All Routes</option>
+                {uniqueRoutes.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
             )}
 
@@ -485,7 +582,7 @@ export default function PlacementTable({
 
             {hasActiveFilters && (
               <button
-                onClick={() => { setClientFilter(""); setDateFilter(""); }}
+                onClick={() => { setClientFilter(""); setRouteFilter(""); setDateFilter(""); }}
                 className="text-xs text-slate-400 hover:text-slate-600 underline transition-colors"
               >
                 Clear filters
@@ -662,10 +759,16 @@ export default function PlacementTable({
                               <span className="text-slate-400">Vehicle</span>
                               <span className="font-mono font-semibold text-slate-700">{p.vehicle?.vehicleNumber ?? "—"}</span>
                             </div>
-                            {(p.driverNumber1 || p.driverNumber2) && (
+                            {(p.driverName1 || p.driverNumber1) && (
                               <div className="flex items-center gap-1">
-                                <span className="text-slate-400">Driver</span>
-                                <span className="font-mono text-slate-700">{[p.driverNumber1, p.driverNumber2].filter(Boolean).join(" · ")}</span>
+                                <span className="text-slate-400">Driver 1</span>
+                                <span className="text-slate-700">{[p.driverName1, p.driverNumber1].filter(Boolean).join(" / ")}</span>
+                              </div>
+                            )}
+                            {(p.driverName2 || p.driverNumber2) && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-400">Driver 2</span>
+                                <span className="text-slate-500">{[p.driverName2, p.driverNumber2].filter(Boolean).join(" / ")}</span>
                               </div>
                             )}
                           </div>
@@ -711,15 +814,31 @@ export default function PlacementTable({
                         </div>
                         <div className="flex flex-col items-end gap-1 flex-shrink-0">
                           {editPlace ? (
-                            <select
-                              value={p.finalStatus}
-                              onChange={(e) => setStatus(p.id, e.target.value)}
-                              className={`text-xs font-semibold border rounded-lg px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-400 ${STATUS_COLOR[p.finalStatus]}`}
-                            >
-                              {Object.entries(FINAL_STATUS_LABELS).map(([k, v]) => (
-                                <option key={k} value={k} disabled={k === "PLACED" && hasOpen}>{v}</option>
-                              ))}
-                            </select>
+                            <>
+                              <select
+                                value={pendingStatuses[p.id] ?? p.finalStatus}
+                                onChange={(e) => setStatus(p.id, e.target.value)}
+                                className={`text-xs font-semibold border rounded-lg px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-400 ${STATUS_COLOR[pendingStatuses[p.id] ?? p.finalStatus]}`}
+                              >
+                                {Object.entries(FINAL_STATUS_LABELS).map(([k, v]) => (
+                                  <option key={k} value={k} disabled={k === "PLACED" && hasOpen}>{v}</option>
+                                ))}
+                              </select>
+                              {statusForms[p.id] !== undefined && (
+                                <div className="mt-1 p-2 bg-white border border-blue-200 rounded-lg space-y-1.5 w-48">
+                                  <input type="datetime-local" value={statusForms[p.id].eta}
+                                    onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], eta: e.target.value } }))}
+                                    className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                                  <input type="text" placeholder="Comment (optional)" value={statusForms[p.id].comment}
+                                    onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], comment: e.target.value } }))}
+                                    className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                                  <div className="flex gap-1">
+                                    <button onClick={() => submitStatusForm(p.id)} className="text-xs px-2 py-1 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700">Confirm</button>
+                                    <button onClick={() => cancelStatusForm(p.id)} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
+                                  </div>
+                                </div>
+                              )}
+                            </>
                           ) : (
                             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLOR[p.finalStatus]}`}>
                               {FINAL_STATUS_LABELS[p.finalStatus]}
@@ -794,14 +913,20 @@ export default function PlacementTable({
                             </div>
                           )}
                         </div>
-                        <div className="flex items-center gap-1 text-slate-500">
+                        <div className="flex items-center gap-1">
                           <span className="text-slate-400">Time</span>
-                          <span className="font-medium text-slate-700">{new Date(p.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                          <span className="font-bold text-blue-600 drop-shadow-[0_0_6px_rgba(59,130,246,0.55)]">{new Date(p.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
-                        {(p.driverNumber1 || p.driverNumber2) && (
-                          <div className="flex items-center gap-1 text-slate-500">
-                            <span className="text-slate-400">Driver</span>
-                            <span className="font-mono text-slate-700">{[p.driverNumber1, p.driverNumber2].filter(Boolean).join(" · ")}</span>
+                        {(p.driverName1 || p.driverNumber1) && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-slate-400">Driver 1</span>
+                            <span className="text-slate-700">{[p.driverName1, p.driverNumber1].filter(Boolean).join(" / ")}</span>
+                          </div>
+                        )}
+                        {(p.driverName2 || p.driverNumber2) && (
+                          <div className="flex items-center gap-1">
+                            <span className="text-slate-400">Driver 2</span>
+                            <span className="text-slate-500">{[p.driverName2, p.driverNumber2].filter(Boolean).join(" / ")}</span>
                           </div>
                         )}
                       </div>
@@ -833,7 +958,20 @@ export default function PlacementTable({
                         <div>
                           <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide block mb-1.5">Placement Check</span>
                           <div className="flex flex-wrap gap-1.5">
-                            <Dropdown value={p.placementTeamRemark?.elockStatus} options={ELOCK_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "elockStatus", v)} />
+                            <div className="flex flex-col gap-1">
+                              <Dropdown value={p.placementTeamRemark?.elockStatus} options={ELOCK_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "elockStatus", v)} />
+                              {elockCommentForms[p.id] !== undefined && (
+                                <div className="flex gap-1">
+                                  <input type="text" placeholder="Comment…" value={elockCommentForms[p.id]}
+                                    onChange={e => setElockCommentForms(prev => ({ ...prev, [p.id]: e.target.value }))}
+                                    className="text-xs border border-slate-200 rounded px-1.5 py-1 flex-1 focus:outline-none focus:ring-1 focus:ring-blue-400 min-w-0" />
+                                  <button onClick={() => saveElockComment(p.id)} className="text-xs px-1.5 py-1 bg-blue-600 text-white rounded font-semibold whitespace-nowrap hover:bg-blue-700">Save</button>
+                                </div>
+                              )}
+                              {p.elockComment && elockCommentForms[p.id] === undefined && (
+                                <p className="text-[10px] text-slate-500 italic">{p.elockComment}</p>
+                              )}
+                            </div>
                             {p.compliance === "E_LOCK_IDFY" && (
                               <Dropdown value={p.placementTeamRemark?.idfyDrivers} options={IDFY_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "idfyDrivers", v)} />
                             )}
@@ -1039,20 +1177,32 @@ export default function PlacementTable({
                           </div>
                         )}
                       </td>
-                      {/* Driver numbers column */}
+                      {/* Driver column */}
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        {p.driverNumber1 || p.driverNumber2 ? (
-                          <div className="space-y-0.5">
-                            {p.driverNumber1 && <p className="text-xs text-slate-600 font-mono">{p.driverNumber1}</p>}
-                            {p.driverNumber2 && <p className="text-xs text-slate-400 font-mono">{p.driverNumber2}</p>}
+                        {(p.driverName1 || p.driverNumber1 || p.driverName2 || p.driverNumber2) ? (
+                          <div className="space-y-1">
+                            {(p.driverName1 || p.driverNumber1) && (
+                              <div>
+                                {p.driverName1 && <p className="text-xs text-slate-700 font-medium">{p.driverName1}</p>}
+                                {p.driverNumber1 && <p className="text-xs text-slate-500 font-mono">{p.driverNumber1}</p>}
+                              </div>
+                            )}
+                            {(p.driverName2 || p.driverNumber2) && (
+                              <div>
+                                {p.driverName2 && <p className="text-xs text-slate-500 font-medium">{p.driverName2}</p>}
+                                {p.driverNumber2 && <p className="text-xs text-slate-400 font-mono">{p.driverNumber2}</p>}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span className="text-slate-300 text-xs">—</span>
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-xs text-slate-500 whitespace-nowrap">
+                      <td className="px-3 py-2.5 text-xs whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
-                          {new Date(p.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                          <span className="font-bold text-blue-600 drop-shadow-[0_0_6px_rgba(59,130,246,0.55)]">
+                            {new Date(p.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
                           {p.finalStatus === "PENDING" && <CountdownBadge placementTime={p.placementTime} />}
                         </div>
                       </td>
@@ -1083,6 +1233,17 @@ export default function PlacementTable({
                       <td className="px-2 py-2 border-l border-slate-200 bg-emerald-50/10">
                         <div className="space-y-1">
                           <Dropdown value={p.placementTeamRemark?.elockStatus} options={ELOCK_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "elockStatus", v)} />
+                          {elockCommentForms[p.id] !== undefined && (
+                            <div className="flex gap-1 mt-1">
+                              <input type="text" placeholder="Comment…" value={elockCommentForms[p.id]}
+                                onChange={e => setElockCommentForms(prev => ({ ...prev, [p.id]: e.target.value }))}
+                                className="text-xs border border-slate-200 rounded px-1.5 py-1 flex-1 focus:outline-none focus:ring-1 focus:ring-blue-400 min-w-0" />
+                              <button onClick={() => saveElockComment(p.id)} className="text-xs px-1.5 py-1 bg-blue-600 text-white rounded font-semibold whitespace-nowrap hover:bg-blue-700">Save</button>
+                            </div>
+                          )}
+                          {p.elockComment && elockCommentForms[p.id] === undefined && (
+                            <p className="text-[10px] text-slate-500 italic truncate max-w-[130px]" title={p.elockComment}>{p.elockComment}</p>
+                          )}
                           {p.issueAlerts.filter(a => ["UNHEALTHY","LOCK_DAMAGE"].includes(a.issueValue)).map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
                         </div>
                       </td>
@@ -1131,15 +1292,31 @@ export default function PlacementTable({
                                 </span>
                               )}
                               {editPlace ? (
-                                <select
-                                  value={p.finalStatus}
-                                  onChange={(e) => setStatus(p.id, e.target.value)}
-                                  className={`text-xs font-semibold border rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 ${STATUS_COLOR[p.finalStatus]}`}
-                                >
-                                  {Object.entries(FINAL_STATUS_LABELS).map(([k, v]) => (
-                                    <option key={k} value={k} disabled={k === "PLACED" && hasOpen}>{v}</option>
-                                  ))}
-                                </select>
+                                <>
+                                  <select
+                                    value={pendingStatuses[p.id] ?? p.finalStatus}
+                                    onChange={(e) => setStatus(p.id, e.target.value)}
+                                    className={`text-xs font-semibold border rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400 ${STATUS_COLOR[pendingStatuses[p.id] ?? p.finalStatus]}`}
+                                  >
+                                    {Object.entries(FINAL_STATUS_LABELS).map(([k, v]) => (
+                                      <option key={k} value={k} disabled={k === "PLACED" && hasOpen}>{v}</option>
+                                    ))}
+                                  </select>
+                                  {statusForms[p.id] !== undefined && (
+                                    <div className="mt-1 p-2 bg-white border border-blue-200 rounded-lg space-y-1.5">
+                                      <input type="datetime-local" value={statusForms[p.id].eta}
+                                        onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], eta: e.target.value } }))}
+                                        className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                                      <input type="text" placeholder="Comment (optional)" value={statusForms[p.id].comment}
+                                        onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], comment: e.target.value } }))}
+                                        className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                                      <div className="flex gap-1">
+                                        <button onClick={() => submitStatusForm(p.id)} className="text-xs px-2 py-1 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700">Confirm</button>
+                                        <button onClick={() => cancelStatusForm(p.id)} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
                               ) : (
                                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${STATUS_COLOR[p.finalStatus]}`}>
                                   {FINAL_STATUS_LABELS[p.finalStatus]}
