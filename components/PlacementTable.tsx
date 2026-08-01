@@ -546,27 +546,23 @@ export default function PlacementTable({
         {isKAM ? (
           <>
             {/* KAM filters: Client, Route, Date, Export Excel */}
-            {uniqueClients.length > 1 && (
-              <select
-                value={clientFilter}
-                onChange={(e) => setClientFilter(e.target.value)}
-                className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-              >
-                <option value="">All Clients</option>
-                {uniqueClients.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            )}
+            <select
+              value={clientFilter}
+              onChange={(e) => setClientFilter(e.target.value)}
+              className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+            >
+              <option value="">All Clients</option>
+              {uniqueClients.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
 
-            {uniqueRoutes.length > 1 && (
-              <select
-                value={routeFilter}
-                onChange={(e) => setRouteFilter(e.target.value)}
-                className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-              >
-                <option value="">All Routes</option>
-                {uniqueRoutes.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
-            )}
+            <select
+              value={routeFilter}
+              onChange={(e) => setRouteFilter(e.target.value)}
+              className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+            >
+              <option value="">All Routes</option>
+              {uniqueRoutes.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
 
             <div className="relative">
               <input
