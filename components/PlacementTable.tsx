@@ -187,6 +187,7 @@ export default function PlacementTable({
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [routeFilter, setRouteFilter] = useState("");
   const [dateFilter, setDateFilter] = useState("");
+  const [clientFilter, setClientFilter] = useState("");
   const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
   const [swappingId, setSwappingId] = useState<string | null>(null);
   const [swapVehicles, setSwapVehicles] = useState<VehicleOption[]>([]);
@@ -337,11 +338,21 @@ export default function PlacementTable({
     return result.sort();
   }, [placements]);
 
+  const uniqueClients = useMemo(() => {
+    const seen = new Set<string>();
+    const result: string[] = [];
+    for (const p of placements) {
+      if (!seen.has(p.client.name)) { seen.add(p.client.name); result.push(p.client.name); }
+    }
+    return result.sort();
+  }, [placements]);
+
   const displayed = placements
     .filter((p) => !statusFilter || p.finalStatus === statusFilter)
     .filter((p) => !vehicleSearch || (p.vehicle?.vehicleNumber ?? "").toLowerCase().includes(vehicleSearch.toLowerCase()))
     .filter((p) => !routeFilter || p.route.name === routeFilter)
-    .filter((p) => !dateFilter || p.date.split("T")[0] === dateFilter);
+    .filter((p) => !dateFilter || p.date.split("T")[0] === dateFilter)
+    .filter((p) => !clientFilter || p.client.name === clientFilter);
 
   const groups = useMemo(() => {
     const byDate: Record<string, Placement[]> = {};
@@ -370,7 +381,7 @@ export default function PlacementTable({
   }
 
   function handleExportExcel() {
-    const headers = ["Date", "#", "Client", "Route", "Schedule", "Lane", "Vehicle", "Driver 1", "Driver 2", "Status"];
+    const headers = ["Date", "#", "Client", "Route", "Schedule", "Lane", "Vehicle", "Driver 1", "Driver 2"];
     const rows = groups.flatMap((group) =>
       group.items.map((p, i) => [
         formatShortDate(group.date),
@@ -382,7 +393,6 @@ export default function PlacementTable({
         p.vehicle?.vehicleNumber ?? "",
         p.driverNumber1 ?? "",
         p.driverNumber2 ?? "",
-        FINAL_STATUS_LABELS[p.finalStatus] ?? p.finalStatus,
       ])
     );
     const escape = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -401,83 +411,124 @@ export default function PlacementTable({
   }
 
   const tableCards = isAdmin ? [PLACED_CARD, PENDING_CARD] : [PLACED_CARD, PENDING_CARD, NOT_PLACED_CARD];
-  const hasActiveFilters = !!(statusFilter || vehicleSearch || routeFilter || dateFilter);
+  const hasActiveFilters = !!(statusFilter || vehicleSearch || routeFilter || dateFilter || clientFilter);
 
   return (
     <div>
       {/* View mode + filters */}
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
-          {([
-            { mode: "week" as ViewMode, label: "Week" },
-            { mode: "month" as ViewMode, label: "Month" },
-          ]).map(({ mode, label }) => (
-            <button
-              key={mode}
-              onClick={() => changeMode(mode)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                viewMode === mode ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        {isKAM ? (
+          <>
+            {/* KAM filters: Client, Date, Export Excel */}
+            {uniqueClients.length > 1 && (
+              <select
+                value={clientFilter}
+                onChange={(e) => setClientFilter(e.target.value)}
+                className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              >
+                <option value="">All Clients</option>
+                {uniqueClients.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            )}
 
-        <div className="relative">
-          <input
-            type="text"
-            value={vehicleSearch}
-            onChange={(e) => setVehicleSearch(e.target.value)}
-            placeholder="Vehicle no…"
-            className="border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm w-36"
-          />
-          <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
-          </svg>
-        </div>
+            <div className="relative">
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              />
+              <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
 
-        {uniqueRoutes.length > 1 && (
-          <select
-            value={routeFilter}
-            onChange={(e) => setRouteFilter(e.target.value)}
-            className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-          >
-            <option value="">All Routes</option>
-            {uniqueRoutes.map((r) => <option key={r} value={r}>{r}</option>)}
-          </select>
-        )}
+            {hasActiveFilters && (
+              <button
+                onClick={() => { setClientFilter(""); setDateFilter(""); }}
+                className="text-xs text-slate-400 hover:text-slate-600 underline transition-colors"
+              >
+                Clear filters
+              </button>
+            )}
 
-        <div className="relative">
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
-          />
-          <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        </div>
+            {!loading && displayed.length > 0 && (
+              <button
+                onClick={handleExportExcel}
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 active:scale-95 transition-all shadow-sm"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export Excel
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Non-KAM filters: Week/Month, Vehicle, Route, Date */}
+            <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+              {([
+                { mode: "week" as ViewMode, label: "Week" },
+                { mode: "month" as ViewMode, label: "Month" },
+              ]).map(({ mode, label }) => (
+                <button
+                  key={mode}
+                  onClick={() => changeMode(mode)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    viewMode === mode ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
 
-        {hasActiveFilters && (
-          <button
-            onClick={() => { setStatusFilter(null); setVehicleSearch(""); setRouteFilter(""); setDateFilter(""); }}
-            className="text-xs text-slate-400 hover:text-slate-600 underline transition-colors"
-          >
-            Clear filters
-          </button>
-        )}
-        {isKAM && !loading && displayed.length > 0 && (
-          <button
-            onClick={handleExportExcel}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 active:scale-95 transition-all shadow-sm"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export Excel
-          </button>
+            <div className="relative">
+              <input
+                type="text"
+                value={vehicleSearch}
+                onChange={(e) => setVehicleSearch(e.target.value)}
+                placeholder="Vehicle no…"
+                className="border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm w-36"
+              />
+              <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z" />
+              </svg>
+            </div>
+
+            {uniqueRoutes.length > 1 && (
+              <select
+                value={routeFilter}
+                onChange={(e) => setRouteFilter(e.target.value)}
+                className="border border-slate-200 rounded-xl px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              >
+                <option value="">All Routes</option>
+                {uniqueRoutes.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            )}
+
+            <div className="relative">
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+              />
+              <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                onClick={() => { setStatusFilter(null); setVehicleSearch(""); setRouteFilter(""); setDateFilter(""); setClientFilter(""); }}
+                className="text-xs text-slate-400 hover:text-slate-600 underline transition-colors"
+              >
+                Clear filters
+              </button>
+            )}
+          </>
         )}
       </div>
 
