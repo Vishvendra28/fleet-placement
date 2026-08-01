@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { SCHEDULE_OPTIONS } from "@/lib/schedule";
 
@@ -42,6 +42,7 @@ export default function NewPlacementForm({
   const [date, setDate] = useState(tomorrow);
   const [rows, setRows] = useState<Row[]>([emptyRow()]);
   const [clientRoutes, setClientRoutes] = useState<Record<number, Route[]>>({});
+  const [allRoutes, setAllRoutes] = useState<Route[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>(initialVehicles);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -67,6 +68,10 @@ export default function NewPlacementForm({
     }
   }, []);
 
+  useEffect(() => {
+    fetch("/api/master/routes").then(r => r.ok ? r.json() : []).then(setAllRoutes).catch(() => {});
+  }, []);
+
   async function addNewVehicle(i: number, vehicleNumber: string) {
     const res = await fetch("/api/vehicles", {
       method: "POST",
@@ -85,12 +90,12 @@ export default function NewPlacementForm({
   }
 
   function swapRoute(i: number, currentRouteId: string, targetLane: "FW" | "RET", routes: Route[]) {
-    const current = routes.find(r => r.id === currentRouteId);
+    const current = allRoutes.find(r => r.id === currentRouteId) || routes.find(r => r.id === currentRouteId);
     if (!current) return;
     const parts = current.name.split("-");
     if (parts.length < 2) return;
     const reversed = [...parts].reverse().join("-");
-    const swapped = routes.find(r => r.name === reversed);
+    const swapped = allRoutes.find(r => r.name === reversed) || routes.find(r => r.name === reversed);
     if (swapped) setField(i, "routeId", swapped.id);
   }
 

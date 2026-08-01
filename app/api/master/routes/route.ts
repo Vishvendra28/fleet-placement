@@ -5,6 +5,21 @@ import { prisma } from "@/lib/prisma";
 import { logAudit } from "@/lib/audit";
 import { apiError } from "@/lib/api-error";
 
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const routes = await prisma.route.findMany({
+      select: { id: true, name: true, origin: true, destination: true },
+      orderBy: { name: "asc" },
+    });
+    return NextResponse.json(routes);
+  } catch (err) {
+    return apiError(err);
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
