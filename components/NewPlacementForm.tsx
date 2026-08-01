@@ -89,14 +89,37 @@ export default function NewPlacementForm({
     setVehicleSearch(i, "");
   }
 
-  function swapRoute(i: number, currentRouteId: string, targetLane: "FW" | "RET", routes: Route[]) {
+  async function swapRoute(i: number, currentRouteId: string, _targetLane: "FW" | "RET", routes: Route[]) {
     const current = allRoutes.find(r => r.id === currentRouteId) || routes.find(r => r.id === currentRouteId);
     if (!current) return;
     const parts = current.name.split("-");
     if (parts.length < 2) return;
-    const reversed = [...parts].reverse().join("-");
-    const swapped = allRoutes.find(r => r.name === reversed) || routes.find(r => r.name === reversed);
-    if (swapped) setField(i, "routeId", swapped.id);
+    const reversedName = [...parts].reverse().join("-");
+
+    let swapped = allRoutes.find(r => r.name === reversedName) || routes.find(r => r.name === reversedName);
+
+    if (!swapped) {
+      // Route doesn't exist yet — create it with reversed origin/destination
+      const res = await fetch("/api/admin/routes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: reversedName, origin: current.destination, destination: current.origin }),
+      });
+      if (res.ok) {
+        swapped = await res.json() as Route;
+        setAllRoutes(prev => [...prev, swapped!]);
+      } else {
+        setError(`Return route "${reversedName}" not found and could not be created automatically.`);
+        return;
+      }
+    }
+
+    // Ensure the swapped route appears in this row's dropdown
+    if (!routes.find(r => r.id === swapped!.id)) {
+      setClientRoutes(prev => ({ ...prev, [i]: [...(prev[i] ?? []), swapped!] }));
+    }
+
+    setField(i, "routeId", swapped.id);
   }
 
   const lookupMaster = useCallback(async (i: number, clientId: string, routeId: string) => {
