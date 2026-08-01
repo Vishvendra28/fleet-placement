@@ -170,8 +170,10 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
   const inProgressCount = displayed.filter(i => i.status === "IN_PROGRESS").length;
   const resolvedCount   = displayed.filter(i => i.status === "RESOLVED").length;
 
-  const hasAnyFiltered  = (iv: string) =>
-    displayed.some(i => i.issueValue === iv && (!statusFilter || i.status === statusFilter));
+  const hasAnyFiltered = (iv: string) =>
+    displayed.some(i => i.issueValue === iv && (
+      statusFilter ? i.status === statusFilter : (i.status === "OPEN" || i.status === "IN_PROGRESS")
+    ));
 
   const STAT_CARDS = [
     { value: "OPEN" as IssueStatus,        label: "Open",        count: openCount,        base: "border-amber-200 bg-gradient-to-br from-amber-50 to-white text-amber-700",   ring: "ring-2 ring-amber-400 ring-offset-1",   Icon: AlertIcon },
@@ -262,7 +264,14 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
         </div>
       ) : (
         <div className="space-y-6">
-          {sections.map((section) => {
+          {[...sections].sort((a, b) => {
+            const priority = (iv: string) => {
+              if (displayed.some(i => i.issueValue === iv && i.status === "OPEN")) return 0;
+              if (displayed.some(i => i.issueValue === iv && i.status === "IN_PROGRESS")) return 1;
+              return 2;
+            };
+            return priority(a.issueValue) - priority(b.issueValue);
+          }).map((section) => {
             const sectionIssues = displayed.filter(
               i => i.issueValue === section.issueValue && (!statusFilter || i.status === statusFilter)
             );
