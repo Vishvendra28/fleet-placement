@@ -56,14 +56,18 @@ export const authOptions: NextAuthOptions = {
       }
       // Re-validate tokenVersion at most every 5 minutes
       const now = Math.floor(Date.now() / 1000);
-      if (now - ((token.lastChecked as number) ?? 0) > 300) {
+      // Default lastChecked to now (not 0) so a missing field doesn't trigger an immediate DB check
+      const lastChecked = (token.lastChecked as number | undefined) ?? now;
+      if (now - lastChecked > 300) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { id: token.sub! },
             select: { tokenVersion: true, role: true },
           });
-          if (!dbUser || dbUser.tokenVersion !== (token.tokenVersion as number)) {
-            return { ...token, exp: 0 }; // force session expiry on next request
+          // Treat undefined tokenVersion in token as 0 (the schema default) to avoid false mismatch
+          const storedVersion = (token.tokenVersion as number | undefined) ?? 0;
+          if (!dbUser || dbUser.tokenVersion !== storedVersion) {
+            return { ...token, exp: Math.floor(Date.now() / 1000) - 1 };
           }
           token.role = dbUser.role;
           token.lastChecked = now;
