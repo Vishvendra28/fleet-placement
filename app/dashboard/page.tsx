@@ -6,6 +6,7 @@ import PlacementTable from "@/components/PlacementTable";
 import IssueDashboard from "@/components/IssueDashboard";
 import DashboardAlerts from "@/components/DashboardAlerts";
 import BackButton from "@/components/BackButton";
+import RouteCoverageWidget from "@/components/RouteCoverageWidget";
 import Link from "next/link";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -130,6 +131,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
       {/* Role-based alerts */}
       <DashboardAlerts userRole="ADMIN" />
+
+      {/* Route coverage */}
+      <RouteCoverageWidget />
 
       {/* Placements */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
