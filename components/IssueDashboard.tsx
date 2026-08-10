@@ -15,6 +15,7 @@ type Issue = {
     cohort: string;
     laneType: string;
     placementTime: string;
+    finalStatus: string;
     driverNumber1: string | null;
     client: { name: string };
     route: { name: string };
@@ -24,7 +25,8 @@ type Issue = {
 
 type ProgressForm = { type: "progress"; etaDate: string; etaTime: string; comment: string };
 type ResolveForm  = { type: "resolve"; comment: string };
-type ActiveForm   = ProgressForm | ResolveForm;
+type ReviseForm   = { type: "revise"; etaDate: string; etaTime: string; comment: string };
+type ActiveForm   = ProgressForm | ResolveForm | ReviseForm;
 
 type Section = { label: string; issueValue: string };
 
@@ -100,6 +102,11 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
     setActiveForms(p => ({ ...p, [id]: { type: "resolve", comment: "" } }));
     setFormErrors(p => { const n = { ...p }; delete n[id]; return n; });
   }
+  function openReviseForm(id: string) {
+    const today = new Date().toISOString().split("T")[0];
+    setActiveForms(p => ({ ...p, [id]: { type: "revise", etaDate: today, etaTime: "", comment: "" } }));
+    setFormErrors(p => { const n = { ...p }; delete n[id]; return n; });
+  }
   function cancelForm(id: string) {
     setActiveForms(p => { const n = { ...p }; delete n[id]; return n; });
     setFormErrors(p => { const n = { ...p }; delete n[id]; return n; });
@@ -129,6 +136,29 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
       body: JSON.stringify({ status: "IN_PROGRESS", resolutionNote: form.comment.trim(), eta: etaIso }),
     });
     setSaving(p => ({ ...p, [id]: false }));
+  }
+
+  async function submitRevise(id: string) {
+    const form = activeForms[id] as ReviseForm;
+    const etaIso = form.etaDate
+      ? new Date(`${form.etaDate}T${form.etaTime || "00:00"}`).toISOString()
+      : null;
+    setSaving(p => ({ ...p, [id]: true }));
+    cancelForm(id);
+    await fetch(`/api/issues/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "IN_PROGRESS", eta: etaIso }),
+    });
+    if (form.comment.trim()) {
+      await fetch(`/api/issues/${id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment: `ETA revised: ${form.comment.trim()}` }),
+      });
+    }
+    setSaving(p => ({ ...p, [id]: false }));
+    fetchIssues();
   }
 
   async function submitResolve(id: string) {
@@ -318,6 +348,7 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
                           <th className="px-3 py-3 text-left">Vehicle</th>
                           <th className="px-3 py-3 text-left">Driver</th>
                           <th className="px-3 py-3 text-left">Time</th>
+                          <th className="px-3 py-3 text-left">Status</th>
                           <th className="px-3 py-3 text-left">Actions</th>
                         </tr>
                       </thead>
@@ -354,6 +385,23 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
                                   {new Date(p.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                                 </td>
                                 <td className="px-3 py-3 whitespace-nowrap">
+                                  {p.finalStatus === "PLACED" && (
+                                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">Placed</span>
+                                  )}
+                                  {p.finalStatus === "PENDING" && (
+                                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">Pending</span>
+                                  )}
+                                  {p.finalStatus === "NOT_PLACED" && (
+                                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-red-100 text-red-700 border border-red-200">Not Placed</span>
+                                  )}
+                                  {p.finalStatus === "ARRIVING" && (
+                                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200">Arriving</span>
+                                  )}
+                                  {p.finalStatus === "WAIT_FOR_UNLOADING" && (
+                                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200">Wait Unloading</span>
+                                  )}
+                                </td>
+                                <td className="px-3 py-3 whitespace-nowrap">
                                   {issue.status === "OPEN" && !form && (
                                     <button
                                       disabled={isSaving}
@@ -367,8 +415,15 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
                                     <span className="text-xs text-amber-600 font-medium">Filling details…</span>
                                   )}
                                   {issue.status === "IN_PROGRESS" && !form && (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
                                       <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 border border-blue-200">In Progress</span>
+                                      <button
+                                        disabled={isSaving}
+                                        onClick={() => openReviseForm(issue.id)}
+                                        className="text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 hover:bg-indigo-200 transition-colors disabled:opacity-50"
+                                      >
+                                        Revise ETA
+                                      </button>
                                       <button
                                         disabled={isSaving}
                                         onClick={() => openResolveForm(issue.id)}
@@ -397,7 +452,7 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
                               {/* ── Inline form row ── */}
                               {form && (
                                 <tr className="border-b border-blue-100 bg-blue-50/40">
-                                  <td colSpan={10} className="px-4 py-3">
+                                  <td colSpan={11} className="px-4 py-3">
                                     {form.type === "progress" && (
                                       <div className="flex flex-wrap items-end gap-3">
                                         <div className="flex flex-col gap-1">
@@ -438,6 +493,54 @@ export default function IssueDashboard({ userRole }: { userRole: string }) {
                                             className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50 transition-colors whitespace-nowrap"
                                           >
                                             Confirm In Progress
+                                          </button>
+                                          <button
+                                            onClick={() => cancelForm(issue.id)}
+                                            className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors"
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {form.type === "revise" && (
+                                      <div className="flex flex-wrap items-end gap-3">
+                                        <div className="flex flex-col gap-1">
+                                          <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">New ETA Date</label>
+                                          <input
+                                            type="date"
+                                            value={form.etaDate}
+                                            onChange={e => patchForm(issue.id, { etaDate: e.target.value })}
+                                            className={inputCls}
+                                          />
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                          <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">New ETA Time</label>
+                                          <input
+                                            type="time"
+                                            value={form.etaTime}
+                                            onChange={e => patchForm(issue.id, { etaTime: e.target.value })}
+                                            className={inputCls}
+                                          />
+                                        </div>
+                                        <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
+                                          <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide">Reason <span className="text-slate-400 normal-case">(optional)</span></label>
+                                          <input
+                                            type="text"
+                                            placeholder="e.g. Work taking longer than expected"
+                                            value={form.comment}
+                                            onChange={e => patchForm(issue.id, { comment: e.target.value })}
+                                            className={`${inputCls} w-full`}
+                                          />
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <button
+                                            disabled={isSaving}
+                                            onClick={() => submitRevise(issue.id)}
+                                            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors whitespace-nowrap"
+                                          >
+                                            Update ETA
                                           </button>
                                           <button
                                             onClick={() => cancelForm(issue.id)}

@@ -51,7 +51,7 @@ const selectCls = "border border-slate-200 rounded-lg px-2.5 py-1.5 text-sm bg-w
 const HOURS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
 const MINUTES = ["00", "15", "30", "45"];
 
-function EtaModal({ onConfirm, onCancel }: { onConfirm: (eta: string, comment: string) => void; onCancel: () => void }) {
+function EtaModal({ onConfirm, onCancel, revisionMode }: { onConfirm: (eta: string, comment: string) => void; onCancel: () => void; revisionMode?: boolean }) {
   const [etaDate, setEtaDate] = useState(new Date().toISOString().split("T")[0]);
   const [etaHour, setEtaHour] = useState("12");
   const [etaMinute, setEtaMinute] = useState("00");
@@ -68,8 +68,8 @@ function EtaModal({ onConfirm, onCancel }: { onConfirm: (eta: string, comment: s
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-1">Mark In Progress</h3>
-        <p className="text-sm text-slate-500 mb-5">Set an ETA and describe what&apos;s being done</p>
+        <h3 className="text-lg font-bold text-slate-900 mb-1">{revisionMode ? "Revise ETA" : "Mark In Progress"}</h3>
+        <p className="text-sm text-slate-500 mb-5">{revisionMode ? "Update the expected resolution time" : "Set an ETA and describe what’s being done"}</p>
 
         <div className="space-y-4">
           <div>
@@ -108,12 +108,14 @@ function EtaModal({ onConfirm, onCancel }: { onConfirm: (eta: string, comment: s
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5 block">
-              What&apos;s being done <span className="text-red-500 normal-case font-normal">* required</span>
+              {revisionMode ? "Reason for revision" : "What's being done"}{" "}
+              {!revisionMode && <span className="text-red-500 normal-case font-normal">* required</span>}
+              {revisionMode && <span className="text-slate-400 normal-case font-normal">(optional)</span>}
             </label>
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="e.g. Arranging replacement driver, vehicle sent to workshop…"
+              placeholder={revisionMode ? "e.g. Work taking longer than expected…" : "e.g. Arranging replacement driver, vehicle sent to workshop…"}
               rows={3}
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
@@ -127,10 +129,10 @@ function EtaModal({ onConfirm, onCancel }: { onConfirm: (eta: string, comment: s
           </button>
           <button
             type="button"
-            disabled={!etaDate || !comment.trim()}
+            disabled={!etaDate || (!revisionMode && !comment.trim())}
             onClick={() => onConfirm(buildEta(), comment.trim())}
             className="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-xl text-sm font-semibold hover:bg-amber-600 transition-colors disabled:opacity-40">
-            Set ETA &amp; Start
+            {revisionMode ? "Update ETA" : "Set ETA & Start"}
           </button>
         </div>
       </div>
@@ -180,6 +182,7 @@ function ResolveModal({ onConfirm, onCancel }: { onConfirm: (note: string) => vo
 function IssueCard({ issue, onUpdate }: { issue: Issue; onUpdate: () => void }) {
   const [saving, setSaving] = useState(false);
   const [showEtaModal, setShowEtaModal] = useState(false);
+  const [showReviseEtaModal, setShowReviseEtaModal] = useState(false);
   const [showResolveModal, setShowResolveModal] = useState(false);
   const [expandComments, setExpandComments] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -214,6 +217,28 @@ function IssueCard({ issue, onUpdate }: { issue: Issue; onUpdate: () => void }) 
     if (r.ok && commentsLoaded) {
       const c = await r.json();
       setComments((prev) => [...prev, c]);
+    }
+    setSaving(false);
+    onUpdate();
+  }
+
+  async function reviseEta(eta: string, comment: string) {
+    setSaving(true);
+    await fetch(`/api/issues/${issue.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "IN_PROGRESS", eta }),
+    });
+    if (comment.trim()) {
+      const r = await fetch(`/api/issues/${issue.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment: `ETA revised: ${comment.trim()}` }),
+      });
+      if (r.ok && commentsLoaded) {
+        const c = await r.json();
+        setComments((prev) => [...prev, c]);
+      }
     }
     setSaving(false);
     onUpdate();
@@ -254,6 +279,13 @@ function IssueCard({ issue, onUpdate }: { issue: Issue; onUpdate: () => void }) 
           onCancel={() => setShowEtaModal(false)}
         />
       )}
+      {showReviseEtaModal && (
+        <EtaModal
+          revisionMode
+          onConfirm={(eta, comment) => { setShowReviseEtaModal(false); reviseEta(eta, comment); }}
+          onCancel={() => setShowReviseEtaModal(false)}
+        />
+      )}
       {showResolveModal && (
         <ResolveModal
           onConfirm={(note) => { setShowResolveModal(false); resolveIssue(note); }}
@@ -277,9 +309,19 @@ function IssueCard({ issue, onUpdate }: { issue: Issue; onUpdate: () => void }) 
                 {ISSUE_STATUS_LABELS[issue.status]}
               </span>
               {issue.status === "IN_PROGRESS" && issue.eta && (
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                  ETA: {new Date(issue.eta).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
-                </span>
+                <>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                    ETA: {new Date(issue.eta).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowReviseEtaModal(true)}
+                    disabled={saving}
+                    className="text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-full font-semibold hover:bg-indigo-200 transition-colors disabled:opacity-50"
+                  >
+                    Revise ETA
+                  </button>
+                </>
               )}
             </div>
           </div>

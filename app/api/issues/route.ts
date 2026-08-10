@@ -26,7 +26,11 @@ export async function GET(req: NextRequest) {
     } else if (role === "E_LOCK_TEAM") {
       where.issueCategory = "EQUIPMENT";
       where.issueValue = { in: ["UNHEALTHY", "LOCK_DAMAGE"] };
-    } else if (role !== "ADMIN" && role !== "PLANNING_TEAM" && role !== "PLACEMENT_TEAM") {
+    } else if (role === "PLANNING_TEAM") {
+      where.issueCategory = { in: ["DRIVER", "MAINTENANCE"] };
+    } else if (role === "PLACEMENT_TEAM") {
+      where.issueCategory = "EQUIPMENT";
+    } else if (role !== "ADMIN") {
       return NextResponse.json([]);
     }
 
@@ -47,6 +51,7 @@ export async function GET(req: NextRequest) {
             cohort: true,
             laneType: true,
             placementTime: true,
+            finalStatus: true,
             driverNumber1: true,
             client: { select: { name: true } },
             route: { select: { name: true } },
