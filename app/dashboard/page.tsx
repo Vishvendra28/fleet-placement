@@ -2,11 +2,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { autoPlannTomorrow } from "@/lib/auto-plan";
 import PlacementTable from "@/components/PlacementTable";
 import IssueDashboard from "@/components/IssueDashboard";
 import DashboardAlerts from "@/components/DashboardAlerts";
 import BackButton from "@/components/BackButton";
 import RouteCoverageWidget from "@/components/RouteCoverageWidget";
+import AdminBulkActions from "@/components/AdminBulkActions";
 import Link from "next/link";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -33,12 +35,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
     driverName1: true, driverNumber1: true, driverName2: true, driverNumber2: true,
     eta: true, statusComment: true, elockComment: true, referenceId: true,
     client: { select: { name: true } },
-    route: { select: { name: true } },
+    route: { select: { name: true, origin: true, destination: true } },
     vehicle: { select: { id: true, vehicleNumber: true } },
     d1Remark: { select: { driverIssue: true, maintenanceIssue: true } },
     sameDayRemark: { select: { driverIssue: true, maintenanceIssue: true } },
     placementTeamRemark: { select: { elockStatus: true, idfyDrivers: true, cargoNet: true, tirpal: true, stepney: true } },
-    issueAlerts: { select: { id: true, status: true, issueCategory: true, issueValue: true } },
+    issueAlerts: { select: { id: true, status: true, issueCategory: true, issueValue: true, source: true } },
   };
 
   if (session?.user.role !== "ADMIN") {
@@ -96,6 +98,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
     );
   }
 
+  // Auto-plan tomorrow's trips (admin path only, after auth confirmed)
+  try { await autoPlannTomorrow(); } catch { /* non-fatal */ }
+
   const [activeIssuesCount, rawPlacements] = await Promise.all([
     prisma.issueAlert.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }),
     prisma.placement.findMany({
@@ -134,6 +139,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
 
       {/* Route coverage */}
       <RouteCoverageWidget />
+
+      {/* Admin bulk actions */}
+      <AdminBulkActions />
 
       {/* Placements */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">

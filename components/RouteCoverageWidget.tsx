@@ -1,13 +1,26 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 
+type UnassignedTrip = {
+  id: string;
+  clientName: string;
+  routeName: string;
+  laneType: string;
+  cohort: string;
+  missingVehicle: boolean;
+  missingDriver: boolean;
+};
+
 type CoverageData = {
   date: string;
   total: number;
   planned: number;
   notPlanned: number;
+  totalPlanned: number;
+  assignedTrips: number;
   plannedRoutes: { id: string; name: string; vehicles: string[] }[];
   notPlannedRoutes: { id: string; name: string }[];
+  unassignedTrips: UnassignedTrip[];
 };
 
 function getTomorrow() {
@@ -42,8 +55,12 @@ export default function RouteCoverageWidget() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
+  const totalPlanned = data?.totalPlanned ?? 0;
+  const assignedTrips = data?.assignedTrips ?? 0;
+  const assignPct = totalPlanned > 0 ? Math.round((assignedTrips / totalPlanned) * 100) : 0;
+  const barColor = assignPct === 100 ? "bg-emerald-500" : assignPct >= 50 ? "bg-blue-500" : "bg-amber-500";
+  // keep for modal badge
   const pct = data && data.total > 0 ? Math.round((data.planned / data.total) * 100) : 0;
-  const barColor = pct === 100 ? "bg-emerald-500" : pct >= 50 ? "bg-blue-500" : "bg-amber-500";
 
   return (
     <>
@@ -79,21 +96,21 @@ export default function RouteCoverageWidget() {
         ) : data ? (
           <>
             <div className="flex items-end gap-1.5 mb-2">
-              <span className="text-3xl font-bold text-slate-900">{data.planned}</span>
-              <span className="text-xl text-slate-400 mb-0.5">/ {data.total}</span>
-              <span className="text-sm text-slate-500 mb-1 ml-0.5">routes planned</span>
+              <span className="text-3xl font-bold text-slate-900">{assignedTrips}</span>
+              <span className="text-xl text-slate-400 mb-0.5">/ {totalPlanned}</span>
+              <span className="text-sm text-slate-500 mb-1 ml-0.5">trips assigned</span>
             </div>
             <div className="w-full bg-slate-100 rounded-full h-2 mb-2">
               <div
                 className={`h-2 rounded-full transition-all duration-700 ${barColor}`}
-                style={{ width: `${pct}%` }}
+                style={{ width: `${assignPct}%` }}
               />
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className={data.notPlanned === 0 ? "text-emerald-600 font-medium" : "text-slate-400"}>
-                {data.notPlanned === 0
-                  ? "All routes planned!"
-                  : `${data.notPlanned} route${data.notPlanned !== 1 ? "s" : ""} not yet planned`}
+              <span className={assignedTrips === totalPlanned && totalPlanned > 0 ? "text-emerald-600 font-medium" : "text-slate-400"}>
+                {assignedTrips === totalPlanned && totalPlanned > 0
+                  ? "All trips assigned!"
+                  : `${totalPlanned - assignedTrips} trip${totalPlanned - assignedTrips !== 1 ? "s" : ""} need vehicle / driver`}
               </span>
               <span className="text-blue-500 font-medium">View details →</span>
             </div>
@@ -139,6 +156,37 @@ export default function RouteCoverageWidget() {
                 </svg>
               </button>
             </div>
+
+            {/* Unassigned trips banner */}
+            {(data.unassignedTrips?.length ?? 0) > 0 && (
+              <div className="px-6 py-3 bg-orange-50 border-b border-orange-100">
+                <p className="text-xs font-bold text-orange-700 uppercase tracking-widest mb-2">
+                  Needs Assignment ({data.unassignedTrips.length})
+                </p>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {data.unassignedTrips.map(t => (
+                    <div key={t.id} className="flex items-center justify-between bg-white border border-orange-100 rounded-xl px-3 py-2">
+                      <div>
+                        <span className="text-xs font-semibold text-slate-800">{t.clientName}</span>
+                        <span className="text-xs text-slate-400 mx-1">·</span>
+                        <span className="text-xs text-slate-600">{t.routeName}</span>
+                        <span className={`ml-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${t.laneType === "FW" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"}`}>
+                          {t.laneType}
+                        </span>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        {t.missingVehicle && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">No Vehicle</span>
+                        )}
+                        {t.missingDriver && (
+                          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-600">No Driver</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Two-column body */}
             <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">

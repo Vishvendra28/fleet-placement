@@ -105,7 +105,7 @@ async function getUpdatedPlacement(id: string) {
       compliance: true, driverName1: true, driverNumber1: true, driverName2: true, driverNumber2: true,
       eta: true, statusComment: true, elockComment: true, referenceId: true,
       client: { select: { name: true } },
-      route: { select: { name: true } },
+      route: { select: { name: true, origin: true, destination: true } },
       vehicle: { select: { id: true, vehicleNumber: true } },
       d1Remark: { select: { driverIssue: true, maintenanceIssue: true } },
       sameDayRemark: { select: { driverIssue: true, maintenanceIssue: true } },
@@ -423,6 +423,90 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       }
 
       return NextResponse.json(result);
+    }
+
+    if (section === "vehicleAssign") {
+      if (role !== "PLACEMENT_TEAM" && role !== "PLANNING_TEAM" && role !== "ADMIN") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const { vehicleId } = data;
+      if (!vehicleId) return NextResponse.json({ error: "vehicleId is required." }, { status: 400 });
+
+      const current = await prisma.placement.findUnique({
+        where: { id },
+        include: { client: { include: { kam: { select: { id: true } } } }, route: true },
+      });
+      if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+      const vehicle = await prisma.vehicle.findUnique({
+        where: { id: vehicleId as string },
+        select: { id: true, vehicleNumber: true, isActive: true },
+      });
+      if (!vehicle) return NextResponse.json({ error: "Vehicle not found." }, { status: 404 });
+      if (!vehicle.isActive) return NextResponse.json({ error: "Vehicle is inactive and cannot be assigned." }, { status: 409 });
+
+      const dateStart = new Date(current.date);
+      dateStart.setUTCHours(0, 0, 0, 0);
+      const dateEnd = new Date(dateStart.getTime() + 86400000);
+      const conflict = await prisma.placement.findFirst({
+        where: { vehicleId: vehicleId as string, date: { gte: dateStart, lt: dateEnd }, id: { not: id } },
+        select: { client: { select: { name: true } }, route: { select: { name: true } } },
+      });
+      if (conflict) {
+        return NextResponse.json(
+          { error: `Vehicle already assigned to ${conflict.client.name} — ${conflict.route.name} on this date.` },
+          { status: 409 }
+        );
+      }
+
+      await prisma.placement.update({ where: { id }, data: { vehicleId: vehicleId as string } });
+
+      await logAudit({
+        userId: session.user.id,
+        action: "UPDATED",
+        entity: "PLACEMENT",
+        entityId: id,
+        description: `${session.user.name} assigned vehicle ${vehicle.vehicleNumber} to ${current.client.name} — ${current.route.name}`,
+        newValue: { vehicleNumber: vehicle.vehicleNumber },
+        placementId: id,
+      });
+
+      return NextResponse.json(await getUpdatedPlacement(id));
+    }
+
+    if (section === "driverDetails") {
+      if (role !== "PLACEMENT_TEAM" && role !== "PLANNING_TEAM" && role !== "ADMIN") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      const current = await prisma.placement.findUnique({
+        where: { id },
+        include: { client: true, route: true },
+      });
+      if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+      const { driverName1, driverNumber1, driverName2, driverNumber2 } = data;
+      await prisma.placement.update({
+        where: { id },
+        data: {
+          driverName1: (driverName1 as string | undefined)?.trim() || null,
+          driverNumber1: (driverNumber1 as string | undefined)?.trim() || null,
+          driverName2: (driverName2 as string | undefined)?.trim() || null,
+          driverNumber2: (driverNumber2 as string | undefined)?.trim() || null,
+        },
+      });
+
+      await logAudit({
+        userId: session.user.id,
+        action: "UPDATED",
+        entity: "PLACEMENT",
+        entityId: id,
+        description: `${session.user.name} updated driver details for ${current.client.name} — ${current.route.name}`,
+        newValue: { driverName1, driverNumber1, driverName2, driverNumber2 },
+        placementId: id,
+      });
+
+      return NextResponse.json(await getUpdatedPlacement(id));
     }
 
     return NextResponse.json({ error: "Invalid section" }, { status: 400 });

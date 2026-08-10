@@ -5,6 +5,7 @@ import {
   DRIVER_ISSUE_LABELS, MAINTENANCE_ISSUE_LABELS, ELOCK_STATUS_LABELS,
   IDFY_STATUS_LABELS, EQUIPMENT_STATUS_LABELS, FINAL_STATUS_LABELS, LANE_TYPE_LABELS,
 } from "@/lib/constants";
+import { is2WaySchedule } from "@/lib/schedule";
 
 function useNow(intervalMs: number) {
   const [now, setNow] = useState(() => Date.now());
@@ -55,7 +56,7 @@ type Placement = {
   driverName2: string | null; driverNumber2: string | null;
   eta: string | null; statusComment: string | null;
   elockComment: string | null; referenceId: string | null;
-  client: { name: string }; route: { name: string }; vehicle: { id: string; vehicleNumber: string } | null;
+  client: { name: string }; route: { name: string; origin: string; destination: string }; vehicle: { id: string; vehicleNumber: string } | null;
   d1Remark: { driverIssue?: string; maintenanceIssue?: string } | null;
   sameDayRemark: { driverIssue?: string; maintenanceIssue?: string } | null;
   placementTeamRemark: { elockStatus?: string; idfyDrivers?: string; cargoNet?: string; tirpal?: string; stepney?: string } | null;
@@ -224,6 +225,15 @@ export default function PlacementTable({
   const [pendingStatuses, setPendingStatuses] = useState<Record<string, string>>({});
   const [statusForms, setStatusForms] = useState<Record<string, { eta: string; comment: string }>>({});
   const [elockCommentForms, setElockCommentForms] = useState<Record<string, string>>({});
+  const [assigningVehicleId, setAssigningVehicleId] = useState<string | null>(null);
+  const [assignVehicleList, setAssignVehicleList] = useState<VehicleOption[]>([]);
+  const [assignVehicleSearch, setAssignVehicleSearch] = useState("");
+  const [pendingAssignVehicleId, setPendingAssignVehicleId] = useState("");
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [assignError, setAssignError] = useState<string | null>(null);
+  const [driverForms, setDriverForms] = useState<Record<string, { d1Name: string; d1Number: string; d2Name: string; d2Number: string }>>({});
+  const [driverSaving, setDriverSaving] = useState<string | null>(null);
+  const [collapsedClients, setCollapsedClients] = useState<Set<string>>(new Set());
 
   const fetchPlacements = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -407,6 +417,73 @@ export default function PlacementTable({
     setDeleteConfirmId(null);
   }
 
+  async function startAssignVehicle(placementId: string) {
+    const res = await fetch("/api/vehicles");
+    if (!res.ok) return;
+    const all: VehicleOption[] = await res.json();
+    setAssignVehicleList(all);
+    setAssignVehicleSearch("");
+    setPendingAssignVehicleId("");
+    setAssignError(null);
+    setAssigningVehicleId(placementId);
+  }
+
+  function cancelAssignVehicle() {
+    setAssigningVehicleId(null);
+    setAssignVehicleSearch("");
+    setPendingAssignVehicleId("");
+    setAssignError(null);
+  }
+
+  async function doAssignVehicle(placementId: string, vehicleId: string) {
+    if (!vehicleId) return;
+    setAssignSaving(true);
+    setAssignError(null);
+    const res = await fetch(`/api/placements/${placementId}/remarks`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section: "vehicleAssign", data: { vehicleId } }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setAssignError(err.error ?? "Assignment failed. Please try again.");
+      setAssignSaving(false);
+      return;
+    }
+    const updated = await res.json().catch(() => null);
+    if (updated?.id) setPlacements((prev) => prev.map((p) => p.id === updated.id ? updated : p));
+    cancelAssignVehicle();
+    setAssignSaving(false);
+  }
+
+  function openDriverForm(p: Placement) {
+    setDriverForms((prev) => ({
+      ...prev,
+      [p.id]: { d1Name: p.driverName1 ?? "", d1Number: p.driverNumber1 ?? "", d2Name: p.driverName2 ?? "", d2Number: p.driverNumber2 ?? "" },
+    }));
+  }
+
+  function cancelDriverForm(id: string) {
+    setDriverForms((prev) => { const n = { ...prev }; delete n[id]; return n; });
+  }
+
+  async function saveDriverDetails(id: string) {
+    const form = driverForms[id];
+    if (!form) return;
+    setDriverSaving(id);
+    const res = await fetch(`/api/placements/${id}/remarks`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section: "driverDetails", data: { driverName1: form.d1Name, driverNumber1: form.d1Number, driverName2: form.d2Name, driverNumber2: form.d2Number } }),
+    });
+    if (res.ok) {
+      const updated = await res.json().catch(() => null);
+      if (updated?.id) setPlacements((prev) => prev.map((p) => p.id === updated.id ? updated : p));
+      cancelDriverForm(id);
+    }
+    setDriverSaving(null);
+  }
+
   async function doVehicleSwap(placementId: string, vehicleId: string, reason: string) {
     if (!vehicleId || !reason) return;
     cancelSwap();
@@ -426,6 +503,12 @@ export default function PlacementTable({
       fetchPlacements(true);
     }
   }
+
+  // For RET trips, swap origin ↔ destination in the display label
+  const routeLabel = (p: Placement) =>
+    p.laneType === "RET"
+      ? `${p.route.destination} → ${p.route.origin}`
+      : `${p.route.origin} → ${p.route.destination}`;
 
   const editPlan = canPlan(userRole);
   const editPlace = canPlace(userRole);
@@ -466,6 +549,32 @@ export default function PlacementTable({
     }
     return Object.keys(byDate).sort().reverse().map((d) => ({ date: d, items: byDate[d] }));
   }, [displayed]);
+
+  function toggleClient(key: string) {
+    setCollapsedClients(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
+
+  const clientGroups = useMemo(() => {
+    return groups.map(group => {
+      const byClient: Record<string, Placement[]> = {};
+      for (const p of group.items) {
+        if (!byClient[p.client.name]) byClient[p.client.name] = [];
+        byClient[p.client.name].push(p);
+      }
+      return {
+        date: group.date,
+        clients: Object.keys(byClient).sort().map(clientName => ({
+          clientName,
+          twoWay: byClient[clientName].filter(p => is2WaySchedule(p.cohort)),
+          oneWay: byClient[clientName].filter(p => !is2WaySchedule(p.cohort)),
+        })),
+      };
+    });
+  }, [groups]);
 
   const placed = placements.filter((p) => p.finalStatus === "PLACED").length;
   const pending = placements.filter((p) => p.finalStatus === "PENDING").length;
@@ -749,7 +858,7 @@ export default function PlacementTable({
                               {LANE_TYPE_LABELS[p.laneType] ?? p.laneType}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-0.5 truncate">{p.route.name} · {p.cohort}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">{routeLabel(p)} · {p.cohort}</p>
                           <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs">
                             <div className="flex items-center gap-1">
                               <span className="text-slate-400">Vehicle</span>
@@ -782,13 +891,38 @@ export default function PlacementTable({
 
           {/* ── Mobile card view ── */}
           <div className={`space-y-3 ${isKAM ? "hidden" : "md:hidden"}`}>
-            {groups.map((group) => (
-              <React.Fragment key={group.date}>
+            {clientGroups.map((cg) => {
+              const totalTrips = cg.clients.reduce((sum, c) => sum + c.twoWay.length + c.oneWay.length, 0);
+              return (
+              <React.Fragment key={cg.date}>
                 <div className="px-1 pb-2 pt-1 flex items-baseline gap-2">
-                  <span className="text-sm font-semibold text-slate-800">{formatLocalDate(group.date)}</span>
-                  <span className="text-xs font-normal text-slate-400">{group.items.length} trip{group.items.length !== 1 ? "s" : ""}</span>
+                  <span className="text-sm font-semibold text-slate-800">{formatLocalDate(cg.date)}</span>
+                  <span className="text-xs font-normal text-slate-400">{totalTrips} trip{totalTrips !== 1 ? "s" : ""}</span>
                 </div>
-                {group.items.map((p, i) => {
+                {cg.clients.map(({ clientName, twoWay, oneWay }) => {
+                  const allTrips = [...twoWay, ...oneWay];
+                  const clientKey = `mob-${cg.date}-${clientName}`;
+                  const isCollapsed = collapsedClients.has(clientKey);
+                  return (
+                    <div key={clientName} className="mb-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleClient(clientKey)}
+                        className="w-full flex items-center justify-between px-3 py-2 bg-slate-100 rounded-xl mb-2 text-left"
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                          <span className="text-sm font-bold text-slate-900">{clientName}</span>
+                          <span className="text-xs text-slate-400">{allTrips.length} trip{allTrips.length !== 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="flex gap-1.5 flex-shrink-0">
+                          {twoWay.length > 0 && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">2Way: {twoWay.length}</span>}
+                          {oneWay.length > 0 && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600">1Way: {oneWay.length}</span>}
+                        </div>
+                      </button>
+                      {!isCollapsed && allTrips.map((p, i) => {
                   const hasOpen = p.issueAlerts.some((a) => a.status === "OPEN" || a.status === "IN_PROGRESS");
                   return (
                     <div key={p.id} className={`rounded-2xl border-2 shadow-sm overflow-hidden ${
@@ -806,7 +940,7 @@ export default function PlacementTable({
                               {LANE_TYPE_LABELS[p.laneType] ?? p.laneType}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-0.5 truncate">{p.route.name} · {p.cohort}</p>
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">{routeLabel(p)} · {p.cohort}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 flex-shrink-0">
                           {editPlace ? (
@@ -859,7 +993,29 @@ export default function PlacementTable({
                       <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs border-b border-black/5">
                         <div className="flex items-center gap-1.5">
                           <span className="text-slate-400">Vehicle</span>
-                          {swappingId === p.id ? (
+                          {assigningVehicleId === p.id ? (
+                            <div className="flex flex-col gap-1.5 mt-0.5">
+                              <input type="text" placeholder="Search vehicle…" value={assignVehicleSearch} autoFocus
+                                onChange={(e) => setAssignVehicleSearch(e.target.value)}
+                                className="text-xs border border-green-300 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full" />
+                              <select value={pendingAssignVehicleId} onChange={(e) => setPendingAssignVehicleId(e.target.value)}
+                                className="text-xs border border-green-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full">
+                                <option value="" disabled>Pick vehicle…</option>
+                                {assignVehicleList.filter((v) => !assignVehicleSearch || v.vehicleNumber.toLowerCase().includes(assignVehicleSearch.toLowerCase())).map((v) => (
+                                  <option key={v.id} value={v.id}>{v.vehicleNumber}</option>
+                                ))}
+                              </select>
+                              {assignError && <p className="text-[10px] text-red-600">{assignError}</p>}
+                              <div className="flex gap-1">
+                                <button disabled={!pendingAssignVehicleId || assignSaving}
+                                  onClick={() => doAssignVehicle(p.id, pendingAssignVehicleId)}
+                                  className="text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg font-semibold disabled:opacity-40 hover:bg-green-700 transition-colors">
+                                  {assignSaving ? "Saving…" : "Assign"}
+                                </button>
+                                <button onClick={cancelAssignVehicle} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
+                              </div>
+                            </div>
+                          ) : swappingId === p.id ? (
                             <div className="flex flex-col gap-1.5 mt-0.5">
                               <input
                                 type="text"
@@ -896,6 +1052,11 @@ export default function PlacementTable({
                                 <button onClick={cancelSwap} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
                               </div>
                             </div>
+                          ) : p.vehicle === null && editPlace ? (
+                            <button onClick={() => startAssignVehicle(p.id)}
+                              className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 transition-colors">
+                              + Assign
+                            </button>
                           ) : (
                             <div className="flex items-center gap-1">
                               <span className="font-mono font-semibold text-slate-700">{p.vehicle?.vehicleNumber ?? "—"}</span>
@@ -913,17 +1074,57 @@ export default function PlacementTable({
                           <span className="text-slate-400">Time</span>
                           <span className="font-bold text-blue-600 drop-shadow-[0_0_6px_rgba(59,130,246,0.55)]">{new Date(p.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
                         </div>
-                        {(p.driverName1 || p.driverNumber1) && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-slate-400">Driver 1</span>
-                            <span className="text-slate-700">{[p.driverName1, p.driverNumber1].filter(Boolean).join(" / ")}</span>
+                        {driverForms[p.id] !== undefined ? (
+                          <div className="flex flex-col gap-1 mt-1 w-full">
+                            <input type="text" placeholder="Driver 1 Name" value={driverForms[p.id].d1Name}
+                              onChange={e => setDriverForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], d1Name: e.target.value } }))}
+                              className="text-xs border border-violet-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-violet-400 w-full" />
+                            <input type="text" placeholder="Driver 1 Number" value={driverForms[p.id].d1Number}
+                              onChange={e => setDriverForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], d1Number: e.target.value } }))}
+                              className="text-xs border border-violet-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-violet-400 w-full" />
+                            <input type="text" placeholder="Driver 2 Name (optional)" value={driverForms[p.id].d2Name}
+                              onChange={e => setDriverForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], d2Name: e.target.value } }))}
+                              className="text-xs border border-violet-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-violet-400 w-full" />
+                            <input type="text" placeholder="Driver 2 Number (optional)" value={driverForms[p.id].d2Number}
+                              onChange={e => setDriverForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], d2Number: e.target.value } }))}
+                              className="text-xs border border-violet-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-violet-400 w-full" />
+                            <div className="flex gap-1">
+                              <button onClick={() => saveDriverDetails(p.id)} disabled={driverSaving === p.id}
+                                className="text-xs px-2.5 py-1 bg-violet-600 text-white rounded-lg font-semibold disabled:opacity-40 hover:bg-violet-700">
+                                {driverSaving === p.id ? "Saving…" : "Save"}
+                              </button>
+                              <button onClick={() => cancelDriverForm(p.id)} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
+                            </div>
                           </div>
-                        )}
-                        {(p.driverName2 || p.driverNumber2) && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-slate-400">Driver 2</span>
-                            <span className="text-slate-500">{[p.driverName2, p.driverNumber2].filter(Boolean).join(" / ")}</span>
-                          </div>
+                        ) : (
+                          <>
+                            {(p.driverName1 || p.driverNumber1) && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-400">Driver 1</span>
+                                <span className="text-slate-700">{[p.driverName1, p.driverNumber1].filter(Boolean).join(" / ")}</span>
+                              </div>
+                            )}
+                            {(p.driverName2 || p.driverNumber2) && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-slate-400">Driver 2</span>
+                                <span className="text-slate-500">{[p.driverName2, p.driverNumber2].filter(Boolean).join(" / ")}</span>
+                              </div>
+                            )}
+                            {!(p.driverName1 || p.driverNumber1) && editPlace && (
+                              <button onClick={() => openDriverForm(p)}
+                                className="text-xs font-semibold px-2 py-0.5 rounded-lg bg-violet-100 text-violet-700 border border-violet-200 hover:bg-violet-200 transition-colors">
+                                + Set Drivers
+                              </button>
+                            )}
+                            {(p.driverName1 || p.driverNumber1) && editPlace && (
+                              <button onClick={() => openDriverForm(p)} title="Edit drivers"
+                                className="text-xs text-slate-400 hover:text-violet-500 transition-colors ml-1">
+                                <svg className="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
 
@@ -994,9 +1195,13 @@ export default function PlacementTable({
                       )}
                     </div>
                   );
+                  })}
+                    </div>
+                  );
                 })}
               </React.Fragment>
-            ))}
+              );
+            })}
           </div>
 
           {/* ── KAM simplified desktop table ── */}
@@ -1025,28 +1230,28 @@ export default function PlacementTable({
                       <tbody>
                         {group.items.map((p, i) => (
                           <tr key={p.id} className={`border-b transition-colors ${ROW_BG[p.finalStatus] ?? "hover:bg-slate-50/70"}`}>
-                            <td className="px-3 py-2.5 text-slate-400 text-xs">{i + 1}</td>
-                            <td className="px-3 py-2.5 font-semibold text-slate-900 whitespace-nowrap">{p.client.name}</td>
-                            <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{p.route.name}</td>
-                            <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap text-xs">{p.cohort}</td>
+                            <td className="px-3 py-2.5 text-slate-400 text-sm">{i + 1}</td>
+                            <td className="px-3 py-2.5 font-semibold text-slate-900 whitespace-nowrap text-sm">{p.client.name}</td>
+                            <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap text-sm">{routeLabel(p)}</td>
+                            <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap text-sm">{p.cohort}</td>
                             <td className="px-3 py-2.5 whitespace-nowrap">
                               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.laneType === "FW" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"}`}>
                                 {LANE_TYPE_LABELS[p.laneType] ?? p.laneType}
                               </span>
                             </td>
-                            <td className="px-3 py-2.5 whitespace-nowrap font-mono text-xs text-slate-500">{p.vehicle?.vehicleNumber ?? "—"}</td>
+                            <td className="px-3 py-2.5 whitespace-nowrap font-mono text-sm text-slate-500">{p.vehicle?.vehicleNumber ?? "—"}</td>
                             <td className="px-3 py-2.5 whitespace-nowrap">
                               {p.driverNumber1 || p.driverNumber2 ? (
                                 <div className="space-y-0.5">
-                                  {p.driverNumber1 && <p className="text-xs text-slate-600 font-mono">{p.driverNumber1}</p>}
-                                  {p.driverNumber2 && <p className="text-xs text-slate-400 font-mono">{p.driverNumber2}</p>}
+                                  {p.driverNumber1 && <p className="text-sm text-slate-600 font-mono">{p.driverNumber1}</p>}
+                                  {p.driverNumber2 && <p className="text-sm text-slate-400 font-mono">{p.driverNumber2}</p>}
                                 </div>
                               ) : (
-                                <span className="text-slate-300 text-xs">—</span>
+                                <span className="text-slate-300 text-sm">—</span>
                               )}
                             </td>
                             <td className="px-3 py-2.5">
-                              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${STATUS_COLOR[p.finalStatus]}`}>
+                              <span className={`text-sm font-semibold px-2.5 py-1 rounded-full border ${STATUS_COLOR[p.finalStatus]}`}>
                                 {FINAL_STATUS_LABELS[p.finalStatus]}
                               </span>
                             </td>
@@ -1062,64 +1267,139 @@ export default function PlacementTable({
 
           {/* ── Desktop table view ── */}
           <div className={isKAM ? "hidden" : "hidden md:block space-y-5"}>
-            {groups.map((group) => (
-              <div key={group.date}>
-                <div className="mb-2.5 px-1 flex items-baseline gap-2">
-                  <h3 className="text-base font-semibold text-slate-800">{formatLocalDate(group.date)}</h3>
-                  <span className="text-sm text-slate-400">{group.items.length} trip{group.items.length !== 1 ? "s" : ""}</span>
+            {clientGroups.map((cg) => {
+              const totalTrips = cg.clients.reduce((sum, c) => sum + c.twoWay.length + c.oneWay.length, 0);
+              return (
+              <div key={cg.date}>
+                <div className="mb-3 px-1 flex items-baseline gap-2">
+                  <h3 className="text-base font-semibold text-slate-800">{formatLocalDate(cg.date)}</h3>
+                  <span className="text-sm text-slate-400">{totalTrips} trip{totalTrips !== 1 ? "s" : ""}</span>
                 </div>
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
-                <table className="w-full text-sm border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                      <th className="px-3 py-3 text-left border-b border-slate-200">#</th>
-                      <th className="px-3 py-3 text-left border-b border-slate-200">Client</th>
-                      <th className="px-3 py-3 text-left border-b border-slate-200">Route</th>
-                      <th className="px-3 py-3 text-left border-b border-slate-200">Schedule</th>
-                      <th className="px-3 py-3 text-left border-b border-slate-200">Lane</th>
-                      <th className="px-3 py-3 text-left border-b border-slate-200">Vehicle</th>
-                      <th className="px-3 py-3 text-left border-b border-slate-200">Driver</th>
-                      <th className="px-3 py-3 text-left border-b border-slate-200">Time</th>
-                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-blue-50/60 text-blue-600">
-                        <div className="font-bold leading-tight">{d1ShortDate(group.date)}</div>
-                        <div className="text-[10px] font-normal opacity-70">(D-1 Planning)</div>
-                      </th>
-                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-indigo-50/60 text-indigo-600">
-                        <div className="font-bold leading-tight">{formatShortDate(group.date)}</div>
-                        <div className="text-[10px] font-normal opacity-70">(Same Day Planning)</div>
-                      </th>
-                      <th colSpan={5} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-emerald-50/60 text-emerald-600">Placement Check</th>
-                      <th className="px-3 py-3 text-center border-b border-l border-slate-200">Status</th>
-                    </tr>
-                    <tr className="bg-slate-50 text-xs text-slate-500">
-                      <th colSpan={8} className="border-b border-slate-200" />
-                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-blue-50/40">Driver Remark</th>
-                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-blue-50/40">Maintenance Remark</th>
-                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-indigo-50/40">Driver Remark</th>
-                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-indigo-50/40">Maintenance Remark</th>
-                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-emerald-50/40">E-Lock</th>
-                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">IDFY</th>
-                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Cargo Net</th>
-                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Tirpal</th>
-                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Stepney</th>
-                      <th className="border-b border-l border-slate-200" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                  {group.items.map((p, i) => (
-                    <tr key={p.id} className={`border-b transition-colors ${ROW_BG[p.finalStatus] ?? "hover:bg-slate-50/70"}`}>
-                      <td className="px-3 py-2.5 text-slate-400 text-xs">{i + 1}</td>
-                      <td className="px-3 py-2.5 font-semibold text-slate-900 whitespace-nowrap">{p.client.name}</td>
-                      <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap">{p.route.name}</td>
-                      <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap text-xs">{p.cohort}</td>
+
+                <div className="space-y-3">
+                  {cg.clients.map(({ clientName, twoWay, oneWay }) => {
+                    const clientKey = `${cg.date}-${clientName}`;
+                    const isCollapsed = collapsedClients.has(clientKey);
+                    const total = twoWay.length + oneWay.length;
+                    return (
+                      <div key={clientName} className="rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                        {/* Client accordion header */}
+                        <button
+                          type="button"
+                          onClick={() => toggleClient(clientKey)}
+                          className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <svg
+                              className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
+                              fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                            <span className="font-bold text-slate-900 text-sm">{clientName}</span>
+                            <span className="text-xs text-slate-400">{total} trip{total !== 1 ? "s" : ""}</span>
+                          </div>
+                          <div className="flex gap-2 flex-shrink-0">
+                            {twoWay.length > 0 && (
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">2Way: {twoWay.length}</span>
+                            )}
+                            {oneWay.length > 0 && (
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">1Way: {oneWay.length}</span>
+                            )}
+                          </div>
+                        </button>
+
+                        {/* Sub-tables per schedule type */}
+                        {!isCollapsed && (
+                          <div className="divide-y divide-slate-100">
+                            {([
+                              { label: "Schedule-2Way", trips: twoWay, labelColor: "text-blue-600", labelBg: "bg-blue-50/70" },
+                              { label: "Schedule-1Way", trips: oneWay, labelColor: "text-slate-500", labelBg: "bg-slate-50" },
+                            ] as { label: string; trips: typeof twoWay; labelColor: string; labelBg: string }[]).filter(s => s.trips.length > 0).map(({ label, trips, labelColor, labelBg }) => (
+                              <div key={label}>
+                                <p className={`px-4 py-2 text-xs font-bold uppercase tracking-widest ${labelColor} ${labelBg} border-b border-slate-100`}>
+                                  {label} ({trips.length})
+                                </p>
+                                <div className="overflow-x-auto">
+                                <table className="w-full text-sm border-collapse">
+                                  <thead>
+                                    <tr className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                                      <th className="px-3 py-3 text-left border-b border-slate-200">#</th>
+                                      <th className="px-3 py-3 text-left border-b border-slate-200">Route</th>
+                                      <th className="px-3 py-3 text-left border-b border-slate-200">Schedule</th>
+                                      <th className="px-3 py-3 text-left border-b border-slate-200">Lane</th>
+                                      <th className="px-3 py-3 text-left border-b border-slate-200">Vehicle</th>
+                                      <th className="px-3 py-3 text-left border-b border-slate-200">Driver</th>
+                                      <th className="px-3 py-3 text-left border-b border-slate-200">Time</th>
+                                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-blue-50/60 text-blue-600">
+                                        <div className="font-bold leading-tight">{d1ShortDate(cg.date)}</div>
+                                        <div className="text-[10px] font-normal opacity-70">(D-1 Planning)</div>
+                                      </th>
+                                      <th colSpan={2} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-indigo-50/60 text-indigo-600">
+                                        <div className="font-bold leading-tight">{formatShortDate(cg.date)}</div>
+                                        <div className="text-[10px] font-normal opacity-70">(Same Day Planning)</div>
+                                      </th>
+                                      <th colSpan={5} className="px-3 py-2 text-center border-b border-l border-slate-200 bg-emerald-50/60 text-emerald-600">Placement Check</th>
+                                      <th className="px-3 py-3 text-center border-b border-l border-slate-200">Status</th>
+                                    </tr>
+                                    <tr className="bg-slate-50 text-xs text-slate-500">
+                                      <th colSpan={7} className="border-b border-slate-200" />
+                                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-blue-50/40">Driver Remark</th>
+                                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-blue-50/40">Maintenance Remark</th>
+                                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-indigo-50/40">Driver Remark</th>
+                                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-indigo-50/40">Maintenance Remark</th>
+                                      <th className="px-2 py-2 border-b border-l border-slate-200 font-medium bg-emerald-50/40">E-Lock</th>
+                                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">IDFY</th>
+                                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Cargo Net</th>
+                                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Tirpal</th>
+                                      <th className="px-2 py-2 border-b border-slate-200 font-medium bg-emerald-50/40">Stepney</th>
+                                      <th className="border-b border-l border-slate-200" />
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                  {trips.map((p, i) => (
+                                    <tr key={p.id} className={`border-b transition-colors ${ROW_BG[p.finalStatus] ?? "hover:bg-slate-50/70"}`}>
+                                      <td className="px-3 py-2.5 text-slate-400 text-sm">{i + 1}</td>
+                                      <td className="px-3 py-2.5 text-slate-600 whitespace-nowrap text-sm">{routeLabel(p)}</td>
+                      <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap text-sm">{p.cohort}</td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${p.laneType === "FW" ? "bg-blue-100 text-blue-700" : "bg-orange-100 text-orange-700"}`}>
                           {LANE_TYPE_LABELS[p.laneType] ?? p.laneType}
                         </span>
                       </td>
-                      {/* Vehicle column with swap */}
+                      {/* Vehicle column with assign/swap */}
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        {swappingId === p.id ? (
+                        {assigningVehicleId === p.id ? (
+                          <div className="flex flex-col gap-1.5 min-w-[160px]">
+                            <input
+                              type="text"
+                              placeholder="Search vehicle…"
+                              value={assignVehicleSearch}
+                              autoFocus
+                              onChange={(e) => setAssignVehicleSearch(e.target.value)}
+                              className="text-xs border border-green-300 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full"
+                            />
+                            <select
+                              value={pendingAssignVehicleId}
+                              onChange={(e) => setPendingAssignVehicleId(e.target.value)}
+                              className="text-xs border border-green-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full"
+                            >
+                              <option value="" disabled>Pick vehicle…</option>
+                              {assignVehicleList.filter((v) => !assignVehicleSearch || v.vehicleNumber.toLowerCase().includes(assignVehicleSearch.toLowerCase())).map((v) => (
+                                <option key={v.id} value={v.id}>{v.vehicleNumber}</option>
+                              ))}
+                            </select>
+                            {assignError && <p className="text-[10px] text-red-600">{assignError}</p>}
+                            <div className="flex gap-1">
+                              <button
+                                disabled={!pendingAssignVehicleId || assignSaving}
+                                onClick={() => doAssignVehicle(p.id, pendingAssignVehicleId)}
+                                className="text-xs px-2.5 py-1 bg-green-600 text-white rounded-lg font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
+                              >{assignSaving ? "Saving…" : "Assign"}</button>
+                              <button onClick={cancelAssignVehicle} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
+                            </div>
+                          </div>
+                        ) : swappingId === p.id ? (
                           <div className="flex flex-col gap-1.5 min-w-[160px]">
                             <input
                               type="text"
@@ -1156,6 +1436,13 @@ export default function PlacementTable({
                               <button onClick={cancelSwap} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
                             </div>
                           </div>
+                        ) : p.vehicle === null && editPlace ? (
+                          <button
+                            onClick={() => startAssignVehicle(p.id)}
+                            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-green-100 text-green-700 border border-green-200 hover:bg-green-200 transition-colors whitespace-nowrap"
+                          >
+                            + Assign Vehicle
+                          </button>
                         ) : (
                           <div className="flex items-center gap-1.5">
                             <span className="font-mono text-xs text-slate-500">{p.vehicle?.vehicleNumber ?? "—"}</span>
@@ -1175,26 +1462,65 @@ export default function PlacementTable({
                       </td>
                       {/* Driver column */}
                       <td className="px-3 py-2.5 whitespace-nowrap">
-                        {(p.driverName1 || p.driverNumber1 || p.driverName2 || p.driverNumber2) ? (
-                          <div className="space-y-1">
-                            {(p.driverName1 || p.driverNumber1) && (
-                              <div>
-                                {p.driverName1 && <p className="text-xs text-slate-700 font-medium">{p.driverName1}</p>}
-                                {p.driverNumber1 && <p className="text-xs text-slate-500 font-mono">{p.driverNumber1}</p>}
-                              </div>
-                            )}
-                            {(p.driverName2 || p.driverNumber2) && (
-                              <div>
-                                {p.driverName2 && <p className="text-xs text-slate-500 font-medium">{p.driverName2}</p>}
-                                {p.driverNumber2 && <p className="text-xs text-slate-400 font-mono">{p.driverNumber2}</p>}
-                              </div>
-                            )}
+                        {driverForms[p.id] !== undefined ? (
+                          <div className="flex flex-col gap-1 min-w-[160px]">
+                            <input type="text" placeholder="Driver 1 Name" value={driverForms[p.id].d1Name}
+                              onChange={e => setDriverForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], d1Name: e.target.value } }))}
+                              className="text-xs border border-violet-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-violet-400 w-full" />
+                            <input type="text" placeholder="Driver 1 Number" value={driverForms[p.id].d1Number}
+                              onChange={e => setDriverForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], d1Number: e.target.value } }))}
+                              className="text-xs border border-violet-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-violet-400 w-full" />
+                            <input type="text" placeholder="Driver 2 Name (optional)" value={driverForms[p.id].d2Name}
+                              onChange={e => setDriverForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], d2Name: e.target.value } }))}
+                              className="text-xs border border-violet-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-violet-400 w-full" />
+                            <input type="text" placeholder="Driver 2 Number (optional)" value={driverForms[p.id].d2Number}
+                              onChange={e => setDriverForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], d2Number: e.target.value } }))}
+                              className="text-xs border border-violet-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-violet-400 w-full" />
+                            <div className="flex gap-1">
+                              <button onClick={() => saveDriverDetails(p.id)} disabled={driverSaving === p.id}
+                                className="text-xs px-2.5 py-1 bg-violet-600 text-white rounded-lg font-semibold disabled:opacity-40 hover:bg-violet-700 transition-colors">
+                                {driverSaving === p.id ? "Saving…" : "Save"}
+                              </button>
+                              <button onClick={() => cancelDriverForm(p.id)} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
+                            </div>
                           </div>
                         ) : (
-                          <span className="text-slate-300 text-xs">—</span>
+                          <div className="flex items-start gap-1 group">
+                            {(p.driverName1 || p.driverNumber1 || p.driverName2 || p.driverNumber2) ? (
+                              <div className="space-y-1">
+                                {(p.driverName1 || p.driverNumber1) && (
+                                  <div>
+                                    {p.driverName1 && <p className="text-sm text-slate-700 font-medium">{p.driverName1}</p>}
+                                    {p.driverNumber1 && <p className="text-sm text-slate-500 font-mono">{p.driverNumber1}</p>}
+                                  </div>
+                                )}
+                                {(p.driverName2 || p.driverNumber2) && (
+                                  <div>
+                                    {p.driverName2 && <p className="text-sm text-slate-500 font-medium">{p.driverName2}</p>}
+                                    {p.driverNumber2 && <p className="text-sm text-slate-400 font-mono">{p.driverNumber2}</p>}
+                                  </div>
+                                )}
+                              </div>
+                            ) : editPlace ? (
+                              <button onClick={() => openDriverForm(p)}
+                                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-violet-100 text-violet-700 border border-violet-200 hover:bg-violet-200 transition-colors whitespace-nowrap">
+                                + Set Drivers
+                              </button>
+                            ) : (
+                              <span className="text-slate-300 text-sm">—</span>
+                            )}
+                            {(p.driverName1 || p.driverNumber1 || p.driverName2 || p.driverNumber2) && editPlace && (
+                              <button onClick={() => openDriverForm(p)} title="Edit drivers"
+                                className="text-slate-300 hover:text-violet-500 transition-colors flex-shrink-0 mt-0.5 opacity-0 group-hover:opacity-100">
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
                         )}
                       </td>
-                      <td className="px-3 py-2.5 text-xs whitespace-nowrap">
+                      <td className="px-3 py-2.5 text-sm whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           <span className="font-bold text-blue-600 drop-shadow-[0_0_6px_rgba(59,130,246,0.55)]">
                             {new Date(p.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
@@ -1298,6 +1624,18 @@ export default function PlacementTable({
                                       <option key={k} value={k} disabled={k === "PLACED" && hasOpen}>{v}</option>
                                     ))}
                                   </select>
+                                  {p.eta && (p.finalStatus === "ARRIVING" || p.finalStatus === "WAIT_FOR_UNLOADING") && !statusForms[p.id] && (
+                                    <button
+                                      onClick={() => {
+                                        const etaLocal = new Date(p.eta!).toLocaleString("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).replace(" ", "T");
+                                        setPendingStatuses((prev) => ({ ...prev, [p.id]: p.finalStatus }));
+                                        setStatusForms((prev) => ({ ...prev, [p.id]: { eta: etaLocal, comment: "" } }));
+                                      }}
+                                      className="text-xs font-semibold px-2 py-1 rounded-lg bg-indigo-100 text-indigo-700 border border-indigo-200 hover:bg-indigo-200 transition-colors whitespace-nowrap"
+                                    >
+                                      Revise ETA
+                                    </button>
+                                  )}
                                   {statusForms[p.id] !== undefined && (
                                     <div className="mt-1 p-2 bg-white border border-blue-200 rounded-lg space-y-1.5">
                                       <input type="datetime-local" value={statusForms[p.id].eta}
@@ -1337,12 +1675,21 @@ export default function PlacementTable({
                         })()}
                       </td>
                     </tr>
-                  ))}
-                  </tbody>
-                </table>
+                                    ))}
+                                  </tbody>
+                                </table>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -1367,7 +1714,7 @@ export default function PlacementTable({
               </div>
               <div className="bg-slate-50 rounded-xl px-4 py-3 mb-5 space-y-1">
                 <p className="text-sm font-semibold text-slate-800">{trip.client.name}</p>
-                <p className="text-xs text-slate-500">{trip.route.name}</p>
+                <p className="text-xs text-slate-500">{routeLabel(trip)}</p>
                 <p className="text-xs text-slate-400">{trip.vehicle?.vehicleNumber ?? "No vehicle"} · {new Date(trip.placementTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</p>
               </div>
               <div className="flex gap-3">

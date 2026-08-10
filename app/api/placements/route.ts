@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
         driverName1: true, driverNumber1: true, driverName2: true, driverNumber2: true,
         eta: true, statusComment: true, elockComment: true, referenceId: true,
         client: { select: { name: true } },
-        route:  { select: { name: true } },
+        route:  { select: { name: true, origin: true, destination: true } },
         vehicle: { select: { id: true, vehicleNumber: true } },
         d1Remark: { select: { driverIssue: true, maintenanceIssue: true } },
         sameDayRemark: { select: { driverIssue: true, maintenanceIssue: true } },

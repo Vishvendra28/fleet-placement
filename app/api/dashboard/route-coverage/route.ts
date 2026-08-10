@@ -27,7 +27,14 @@ export async function GET(req: NextRequest) {
     prisma.placement.findMany({
       where: { date: { gte: d, lt: nextDay } },
       select: {
+        id: true,
         routeId: true,
+        laneType: true,
+        cohort: true,
+        vehicleId: true,
+        driverNumber1: true,
+        client: { select: { name: true } },
+        route: { select: { name: true } },
         vehicle: { select: { vehicleNumber: true } },
       },
     }),
@@ -51,6 +58,22 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Trip-level assignment stats
+  const totalPlanned = placements.length;
+  const assignedTrips = placements.filter(p => p.vehicleId && p.driverNumber1).length;
+
+  const unassignedTrips = placements
+    .filter(p => !p.vehicleId || !p.driverNumber1)
+    .map(p => ({
+      id: p.id,
+      clientName: p.client.name,
+      routeName: p.route.name,
+      laneType: p.laneType,
+      cohort: p.cohort,
+      missingVehicle: !p.vehicleId,
+      missingDriver: !p.driverNumber1,
+    }));
+
   return NextResponse.json({
     date: dateParam,
     total: allRoutes.length,
@@ -58,5 +81,8 @@ export async function GET(req: NextRequest) {
     notPlanned: notPlannedRoutes.length,
     plannedRoutes,
     notPlannedRoutes,
+    totalPlanned,
+    assignedTrips,
+    unassignedTrips,
   });
 }
