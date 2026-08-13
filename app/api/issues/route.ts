@@ -12,10 +12,12 @@ export async function GET(req: NextRequest) {
     const role = session.user.role;
     const statusFilter = req.nextUrl.searchParams.get("status");
     const categoryFilter = req.nextUrl.searchParams.get("category");
+    const placementIdFilter = req.nextUrl.searchParams.get("placementId");
 
     const where: Record<string, unknown> = {};
     if (statusFilter && statusFilter !== "ALL") where.status = statusFilter;
     if (categoryFilter && categoryFilter !== "ALL") where.issueCategory = categoryFilter;
+    if (placementIdFilter) where.placementId = placementIdFilter;
 
     if (role === "DRIVER_MANAGEMENT") {
       where.issueCategory = "DRIVER";

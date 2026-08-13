@@ -453,15 +453,21 @@ export default function IssuesPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [vehicleFilter, setVehicleFilter] = useState("");
+  const [placementIdFilter, setPlacementIdFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
     const v = sp.get("vehicle");
     if (v) setVehicleFilter(v);
+    const pid = sp.get("placementId");
+    if (pid) setPlacementIdFilter(pid);
   }, []);
 
   const load = useCallback(async () => {
-    const res = await fetch("/api/issues?status=ALL");
+    const sp = new URLSearchParams(window.location.search);
+    const pid = sp.get("placementId");
+    const url = pid ? `/api/issues?status=ALL&placementId=${pid}` : "/api/issues?status=ALL";
+    const res = await fetch(url);
     if (res.ok) setIssues(await res.json());
     setLoading(false);
   }, []);
@@ -495,6 +501,16 @@ export default function IssuesPage() {
           <p className="text-sm text-slate-500 mt-0.5">Track and resolve operational issues</p>
         </div>
       </div>
+
+      {placementIdFilter && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-700">
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+          </svg>
+          <span className="font-medium">Showing issues for this trip only</span>
+          <a href="/issues" className="ml-auto text-xs text-blue-500 hover:text-blue-700 underline font-semibold">View all</a>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-3">
         {[
