@@ -94,11 +94,19 @@ const SWAP_REASONS = [
   { value: "OTHERS", label: "Others" },
 ];
 
-function IssueChip({ value, resolved }: { value: string; resolved?: boolean }) {
-  if (resolved) {
+function IssueChip({ value, status }: { value: string; status: string }) {
+  if (status === "RESOLVED") {
     return (
       <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+        {ISSUE_VALUE_LABELS[value] ?? value}
+      </span>
+    );
+  }
+  if (status === "IN_PROGRESS") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-yellow-50 text-yellow-800 border border-yellow-300 whitespace-nowrap">
+        <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0" />
         {ISSUE_VALUE_LABELS[value] ?? value}
       </span>
     );
@@ -1138,7 +1146,7 @@ export default function PlacementTable({
                           <div className="flex flex-wrap gap-1.5">
                             <Dropdown value={p.d1Remark?.driverIssue} options={DRIVER_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "d1", "driverIssue", v)} />
                             <Dropdown value={p.d1Remark?.maintenanceIssue} options={MAINTENANCE_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "d1", "maintenanceIssue", v)} />
-                            {p.issueAlerts.filter(a => (a.issueCategory === "DRIVER" || a.issueCategory === "MAINTENANCE" || a.issueValue === "TYRE_AND_ALIGNMENT") && a.source === "D1").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                            {p.issueAlerts.filter(a => (a.issueCategory === "DRIVER" || a.issueCategory === "MAINTENANCE" || a.issueValue === "TYRE_AND_ALIGNMENT") && a.source === "D1").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                           </div>
                         </div>
                         <div className="flex items-start gap-2 flex-wrap">
@@ -1149,7 +1157,7 @@ export default function PlacementTable({
                           <div className="flex flex-wrap gap-1.5">
                             <Dropdown value={p.sameDayRemark?.driverIssue} options={DRIVER_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "sameDay", "driverIssue", v)} />
                             <Dropdown value={p.sameDayRemark?.maintenanceIssue} options={MAINTENANCE_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "sameDay", "maintenanceIssue", v)} />
-                            {p.issueAlerts.filter(a => (a.issueCategory === "DRIVER" || a.issueCategory === "MAINTENANCE" || a.issueValue === "TYRE_AND_ALIGNMENT") && a.source === "SAME_DAY").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                            {p.issueAlerts.filter(a => (a.issueCategory === "DRIVER" || a.issueCategory === "MAINTENANCE" || a.issueValue === "TYRE_AND_ALIGNMENT") && a.source === "SAME_DAY").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                           </div>
                         </div>
                         <div>
@@ -1175,7 +1183,7 @@ export default function PlacementTable({
                             <Dropdown value={p.placementTeamRemark?.cargoNet} options={EQUIPMENT_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "cargoNet", v)} />
                             <Dropdown value={p.placementTeamRemark?.tirpal} options={EQUIPMENT_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "tirpal", v)} />
                             <Dropdown value={p.placementTeamRemark?.stepney} options={EQUIPMENT_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "stepney", v)} />
-                            {p.issueAlerts.filter(a => a.issueCategory === "EQUIPMENT").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                            {p.issueAlerts.filter(a => a.issueCategory === "EQUIPMENT").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                           </div>
                         </div>
                       </div>
@@ -1543,25 +1551,25 @@ export default function PlacementTable({
                       <td className="px-2 py-2 border-l border-slate-200 bg-blue-50/10">
                         <div className="space-y-1">
                           <Dropdown value={p.d1Remark?.driverIssue} options={DRIVER_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "d1", "driverIssue", v)} />
-                          {p.issueAlerts.filter(a => a.issueCategory === "DRIVER" && a.source === "D1").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                          {p.issueAlerts.filter(a => a.issueCategory === "DRIVER" && a.source === "D1").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                         </div>
                       </td>
                       <td className="px-2 py-2 bg-blue-50/10">
                         <div className="space-y-1">
                           <Dropdown value={p.d1Remark?.maintenanceIssue} options={MAINTENANCE_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "d1", "maintenanceIssue", v)} />
-                          {p.issueAlerts.filter(a => (a.issueCategory === "MAINTENANCE" || a.issueValue === "TYRE_AND_ALIGNMENT") && a.source === "D1").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                          {p.issueAlerts.filter(a => (a.issueCategory === "MAINTENANCE" || a.issueValue === "TYRE_AND_ALIGNMENT") && a.source === "D1").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                         </div>
                       </td>
                       <td className="px-2 py-2 border-l border-slate-200 bg-indigo-50/10">
                         <div className="space-y-1">
                           <Dropdown value={p.sameDayRemark?.driverIssue} options={DRIVER_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "sameDay", "driverIssue", v)} />
-                          {p.issueAlerts.filter(a => a.issueCategory === "DRIVER" && a.source === "SAME_DAY").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                          {p.issueAlerts.filter(a => a.issueCategory === "DRIVER" && a.source === "SAME_DAY").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                         </div>
                       </td>
                       <td className="px-2 py-2 bg-indigo-50/10">
                         <div className="space-y-1">
                           <Dropdown value={p.sameDayRemark?.maintenanceIssue} options={MAINTENANCE_ISSUE_LABELS} disabled={!editPlan} onChange={(v) => update(p.id, "sameDay", "maintenanceIssue", v)} />
-                          {p.issueAlerts.filter(a => (a.issueCategory === "MAINTENANCE" || a.issueValue === "TYRE_AND_ALIGNMENT") && a.source === "SAME_DAY").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                          {p.issueAlerts.filter(a => (a.issueCategory === "MAINTENANCE" || a.issueValue === "TYRE_AND_ALIGNMENT") && a.source === "SAME_DAY").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                         </div>
                       </td>
                       <td className="px-2 py-2 border-l border-slate-200 bg-emerald-50/10">
@@ -1578,14 +1586,14 @@ export default function PlacementTable({
                           {p.elockComment && elockCommentForms[p.id] === undefined && (
                             <p className="text-[10px] text-slate-500 italic truncate max-w-[130px]" title={p.elockComment}>{p.elockComment}</p>
                           )}
-                          {p.issueAlerts.filter(a => ["UNHEALTHY","LOCK_DAMAGE"].includes(a.issueValue)).map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                          {p.issueAlerts.filter(a => ["UNHEALTHY","LOCK_DAMAGE"].includes(a.issueValue)).map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                         </div>
                       </td>
                       <td className="px-2 py-2 bg-emerald-50/10">
                         {p.compliance === "E_LOCK_IDFY" ? (
                           <div className="space-y-1">
                             <Dropdown value={p.placementTeamRemark?.idfyDrivers} options={IDFY_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "idfyDrivers", v)} />
-                            {p.issueAlerts.filter(a => a.issueValue === "IDFY_NOT_AVAILABLE").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                            {p.issueAlerts.filter(a => a.issueValue === "IDFY_NOT_AVAILABLE").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                           </div>
                         ) : (
                           <span className="text-xs text-slate-300 px-1">N/A</span>
@@ -1594,19 +1602,19 @@ export default function PlacementTable({
                       <td className="px-2 py-2 bg-emerald-50/10">
                         <div className="space-y-1">
                           <Dropdown value={p.placementTeamRemark?.cargoNet} options={EQUIPMENT_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "cargoNet", v)} />
-                          {p.issueAlerts.filter(a => a.issueValue === "CARGO_NET").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                          {p.issueAlerts.filter(a => a.issueValue === "CARGO_NET").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                         </div>
                       </td>
                       <td className="px-2 py-2 bg-emerald-50/10">
                         <div className="space-y-1">
                           <Dropdown value={p.placementTeamRemark?.tirpal} options={EQUIPMENT_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "tirpal", v)} />
-                          {p.issueAlerts.filter(a => a.issueValue === "TIRPAL").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                          {p.issueAlerts.filter(a => a.issueValue === "TIRPAL").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                         </div>
                       </td>
                       <td className="px-2 py-2 bg-emerald-50/10">
                         <div className="space-y-1">
                         <Dropdown value={p.placementTeamRemark?.stepney} options={EQUIPMENT_STATUS_LABELS} disabled={!editPlace} onChange={(v) => update(p.id, "placementTeam", "stepney", v)} />
-                        {p.issueAlerts.filter(a => a.issueValue === "STEPNEY").map(a => <IssueChip key={a.id} value={a.issueValue} resolved={a.status === "RESOLVED"} />)}
+                        {p.issueAlerts.filter(a => a.issueValue === "STEPNEY").map(a => <IssueChip key={a.id} value={a.issueValue} status={a.status} />)}
                         </div>
                       </td>
                       <td className="px-2 py-2 border-l border-slate-200">
