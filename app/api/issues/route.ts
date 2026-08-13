@@ -26,10 +26,8 @@ export async function GET(req: NextRequest) {
     } else if (role === "E_LOCK_TEAM") {
       where.issueCategory = "EQUIPMENT";
       where.issueValue = { in: ["UNHEALTHY", "LOCK_DAMAGE"] };
-    } else if (role === "PLANNING_TEAM") {
-      where.issueCategory = { in: ["DRIVER", "MAINTENANCE"] };
-    } else if (role === "PLACEMENT_TEAM") {
-      where.issueCategory = "EQUIPMENT";
+    } else if (role === "PLANNING_TEAM" || role === "PLACEMENT_TEAM") {
+      // Both teams see all issue categories
     } else if (role !== "ADMIN") {
       return NextResponse.json([]);
     }

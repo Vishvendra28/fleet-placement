@@ -40,7 +40,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
     d1Remark: { select: { driverIssue: true, maintenanceIssue: true } },
     sameDayRemark: { select: { driverIssue: true, maintenanceIssue: true } },
     placementTeamRemark: { select: { elockStatus: true, idfyDrivers: true, cargoNet: true, tirpal: true, stepney: true } },
-    issueAlerts: { select: { id: true, status: true, issueCategory: true, issueValue: true, source: true } },
+    issueAlerts: { select: { id: true, status: true, issueCategory: true, issueValue: true, source: true, eta: true, resolutionNote: true } },
   };
 
   if (session?.user.role !== "ADMIN") {

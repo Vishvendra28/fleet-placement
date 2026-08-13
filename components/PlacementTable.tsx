@@ -60,7 +60,7 @@ type Placement = {
   d1Remark: { driverIssue?: string; maintenanceIssue?: string } | null;
   sameDayRemark: { driverIssue?: string; maintenanceIssue?: string } | null;
   placementTeamRemark: { elockStatus?: string; idfyDrivers?: string; cargoNet?: string; tirpal?: string; stepney?: string } | null;
-  issueAlerts: { id: string; status: string; issueCategory: string; issueValue: string; source: string | null }[];
+  issueAlerts: { id: string; status: string; issueCategory: string; issueValue: string; source: string | null; eta: string | null; resolutionNote: string | null }[];
 };
 
 type VehicleOption = { id: string; vehicleNumber: string; type: string | null };
@@ -1183,11 +1183,23 @@ export default function PlacementTable({
                       {/* Issue alerts + status error */}
                       {(hasOpen || statusError === p.id) && (
                         <div className="px-4 pb-3 flex flex-wrap items-center gap-2">
-                          {hasOpen && (
+                          {p.issueAlerts.filter((a) => a.status === "OPEN").length > 0 && (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
-                              ● {p.issueAlerts.filter((a) => a.status === "OPEN" || a.status === "IN_PROGRESS").length} open issue{p.issueAlerts.filter((a) => a.status === "OPEN" || a.status === "IN_PROGRESS").length > 1 ? "s" : ""}
+                              ● {p.issueAlerts.filter((a) => a.status === "OPEN").length} open issue{p.issueAlerts.filter((a) => a.status === "OPEN").length > 1 ? "s" : ""}
                             </span>
                           )}
+                          {p.issueAlerts.filter((a) => a.status === "IN_PROGRESS").map((a) => {
+                            const etaStr = a.eta ? new Date(a.eta).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null;
+                            return (
+                              <div key={a.id} className="flex flex-col gap-0.5">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-300">
+                                  ● In Progress
+                                </span>
+                                {etaStr && <span className="text-[10px] text-yellow-700 font-medium">ETA: {etaStr}</span>}
+                                {a.resolutionNote && <span className="text-[10px] text-slate-500 italic max-w-[160px] truncate" title={a.resolutionNote}>{a.resolutionNote}</span>}
+                              </div>
+                            );
+                          })}
                           {statusError === p.id && (
                             <span className="text-[10px] text-red-600 font-medium">Resolve open issues first</span>
                           )}
@@ -1599,15 +1611,29 @@ export default function PlacementTable({
                       </td>
                       <td className="px-2 py-2 border-l border-slate-200">
                         {(() => {
-                          const hasOpen = p.issueAlerts.some((a) => a.status === "OPEN" || a.status === "IN_PROGRESS");
+                          const openAlerts = p.issueAlerts.filter((a) => a.status === "OPEN");
+                          const inProgressAlerts = p.issueAlerts.filter((a) => a.status === "IN_PROGRESS");
+                          const hasOpen = openAlerts.length > 0 || inProgressAlerts.length > 0;
                           const allResolved = p.issueAlerts.length > 0 && !hasOpen;
                           return (
                             <div className="flex flex-col items-start gap-1 min-w-[90px]">
-                              {hasOpen && (
+                              {openAlerts.length > 0 && (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200 whitespace-nowrap">
-                                  ● {p.issueAlerts.filter((a) => a.status === "OPEN" || a.status === "IN_PROGRESS").length} open issue{p.issueAlerts.filter((a) => a.status === "OPEN" || a.status === "IN_PROGRESS").length > 1 ? "s" : ""}
+                                  ● {openAlerts.length} open issue{openAlerts.length > 1 ? "s" : ""}
                                 </span>
                               )}
+                              {inProgressAlerts.map((a) => {
+                                const etaStr = a.eta ? new Date(a.eta).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null;
+                                return (
+                                  <div key={a.id} className="flex flex-col gap-0.5">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-800 border border-yellow-300 whitespace-nowrap">
+                                      ● In Progress
+                                    </span>
+                                    {etaStr && <span className="text-[10px] text-yellow-700 font-medium leading-tight">ETA: {etaStr}</span>}
+                                    {a.resolutionNote && <span className="text-[10px] text-slate-500 italic max-w-[130px] truncate leading-tight" title={a.resolutionNote}>{a.resolutionNote}</span>}
+                                  </div>
+                                );
+                              })}
                               {allResolved && (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                                   ✓ Ready to Place

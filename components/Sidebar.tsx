@@ -80,11 +80,11 @@ const MAIN_NAV: NavItem[] = [
   },
   {
     label: "D-1 Pending", href: "/d1-pending", icon: "clock",
-    roles: ["ADMIN", "PLANNING_TEAM", "PLACEMENT_TEAM"],
+    roles: ["ADMIN"],
   },
   {
     label: "Same Day Pending", href: "/sameday-pending", icon: "clock",
-    roles: ["ADMIN", "PLANNING_TEAM", "PLACEMENT_TEAM"],
+    roles: ["ADMIN"],
   },
 ];
 
