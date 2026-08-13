@@ -91,6 +91,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
           )}
         </div>
         <DashboardAlerts userRole={session!.user.role} />
+        {(session!.user.role === "PLANNING_TEAM" || session!.user.role === "PLACEMENT_TEAM") && (
+          <div className="mt-4">
+            <RouteCoverageWidget />
+          </div>
+        )}
         <div className="mt-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
           <PlacementTable userRole={session!.user.role} initialPlacements={placements} />
         </div>
