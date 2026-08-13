@@ -112,8 +112,8 @@ function IssueChip({ value, status, eta, resolutionNote }: { value: string; stat
           <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 flex-shrink-0" />
           {label}
         </span>
-        {etaStr && <span className="text-[9px] text-yellow-700 font-medium pl-0.5">ETA: {etaStr}</span>}
-        {resolutionNote && <span className="text-[9px] text-slate-500 italic pl-0.5 max-w-[130px] truncate" title={resolutionNote}>{resolutionNote}</span>}
+        {etaStr && <span className="text-[11px] text-yellow-700 font-medium pl-0.5">ETA: {etaStr}</span>}
+        {resolutionNote && <span className="text-[11px] text-slate-500 italic pl-0.5 max-w-[130px] truncate" title={resolutionNote}>{resolutionNote}</span>}
       </div>
     );
   }
