@@ -20,7 +20,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!issue) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const role = session.user.role;
-    if (role !== "ADMIN") {
+    const isSupervisor = role === "PLANNING_TEAM" || role === "PLACEMENT_TEAM";
+    if (role !== "ADMIN" && !isSupervisor) {
       if (issue.issueCategory === "DRIVER" && role !== "DRIVER_MANAGEMENT")
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       if ((issue.issueCategory === "MAINTENANCE" || issue.issueCategory === "EQUIPMENT") && role !== "MAINTENANCE_TEAM" && role !== "STORE_AND_TYRE" && role !== "E_LOCK_TEAM")

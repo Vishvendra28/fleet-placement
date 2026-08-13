@@ -207,7 +207,7 @@ function IssueCard({ issue, onUpdate }: { issue: Issue; onUpdate: () => void }) 
     await fetch(`/api/issues/${issue.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "IN_PROGRESS", eta }),
+      body: JSON.stringify({ status: "IN_PROGRESS", eta, resolutionNote: comment }),
     });
     const r = await fetch(`/api/issues/${issue.id}/comments`, {
       method: "POST",
