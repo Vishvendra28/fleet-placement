@@ -345,7 +345,7 @@ export default function PlacementTable({
       setTimeout(() => setStatusError((cur) => (cur === id ? null : cur)), 3000);
       return;
     }
-    if (value === "ARRIVING" || value === "WAIT_FOR_UNLOADING") {
+    if (value === "NOT_PLACED" || value === "ARRIVING" || value === "WAIT_FOR_UNLOADING") {
       setPendingStatuses((prev) => ({ ...prev, [id]: value }));
       setStatusForms((prev) => ({ ...prev, [id]: { eta: "", comment: "" } }));
       return;
@@ -970,14 +970,20 @@ export default function PlacementTable({
                               </select>
                               {statusForms[p.id] !== undefined && (
                                 <div className="mt-1 p-2 bg-white border border-blue-200 rounded-lg space-y-1.5 w-48">
-                                  <input type="datetime-local" value={statusForms[p.id].eta}
-                                    onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], eta: e.target.value } }))}
-                                    className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
-                                  <input type="text" placeholder="Comment (optional)" value={statusForms[p.id].comment}
+                                  {pendingStatuses[p.id] !== "NOT_PLACED" && (
+                                    <input type="datetime-local" value={statusForms[p.id].eta}
+                                      onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], eta: e.target.value } }))}
+                                      className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                                  )}
+                                  <input type="text"
+                                    placeholder={pendingStatuses[p.id] === "NOT_PLACED" ? "Reason * (required)" : "Comment (optional)"}
+                                    value={statusForms[p.id].comment}
                                     onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], comment: e.target.value } }))}
                                     className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
                                   <div className="flex gap-1">
-                                    <button onClick={() => submitStatusForm(p.id)} className="text-xs px-2 py-1 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700">Confirm</button>
+                                    <button onClick={() => submitStatusForm(p.id)}
+                                      disabled={pendingStatuses[p.id] === "NOT_PLACED" && !statusForms[p.id].comment.trim()}
+                                      className="text-xs px-2 py-1 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed">Confirm</button>
                                     <button onClick={() => cancelStatusForm(p.id)} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
                                   </div>
                                 </div>
@@ -1677,14 +1683,20 @@ export default function PlacementTable({
                                   )}
                                   {statusForms[p.id] !== undefined && (
                                     <div className="mt-1 p-2 bg-white border border-blue-200 rounded-lg space-y-1.5">
-                                      <input type="datetime-local" value={statusForms[p.id].eta}
-                                        onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], eta: e.target.value } }))}
-                                        className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
-                                      <input type="text" placeholder="Comment (optional)" value={statusForms[p.id].comment}
+                                      {pendingStatuses[p.id] !== "NOT_PLACED" && (
+                                        <input type="datetime-local" value={statusForms[p.id].eta}
+                                          onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], eta: e.target.value } }))}
+                                          className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                                      )}
+                                      <input type="text"
+                                        placeholder={pendingStatuses[p.id] === "NOT_PLACED" ? "Reason * (required)" : "Comment (optional)"}
+                                        value={statusForms[p.id].comment}
                                         onChange={e => setStatusForms(prev => ({ ...prev, [p.id]: { ...prev[p.id], comment: e.target.value } }))}
                                         className="text-xs border border-slate-200 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-blue-400" />
                                       <div className="flex gap-1">
-                                        <button onClick={() => submitStatusForm(p.id)} className="text-xs px-2 py-1 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700">Confirm</button>
+                                        <button onClick={() => submitStatusForm(p.id)}
+                                          disabled={pendingStatuses[p.id] === "NOT_PLACED" && !statusForms[p.id].comment.trim()}
+                                          className="text-xs px-2 py-1 bg-blue-600 text-white rounded font-semibold hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed">Confirm</button>
                                         <button onClick={() => cancelStatusForm(p.id)} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">Cancel</button>
                                       </div>
                                     </div>
