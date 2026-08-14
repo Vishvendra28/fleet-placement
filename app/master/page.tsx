@@ -272,6 +272,12 @@ export default function MasterPage() {
   const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState("PLANNING_TEAM");
 
+  // Reset password modal
+  const [resetPwdTarget, setResetPwdTarget] = useState<User | null>(null);
+  const [resetPwdValue, setResetPwdValue] = useState("");
+  const [resetPwdSaving, setResetPwdSaving] = useState(false);
+  const [resetPwdErr, setResetPwdErr] = useState("");
+
   // Vehicle modal
   const [vModal, setVModal] = useState<{ mode: "add" } | { mode: "edit"; vehicle: Vehicle } | null>(null);
   const [vNum, setVNum] = useState("");
@@ -680,6 +686,53 @@ export default function MasterPage() {
         </div>
       )}
 
+      {/* Reset Password modal */}
+      {resetPwdTarget && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+            <h3 className="text-lg font-bold text-slate-900 mb-1">Reset Password</h3>
+            <p className="text-sm text-slate-500 mb-4">Set a new password for <span className="font-semibold text-slate-700">{resetPwdTarget.name}</span></p>
+            <div>
+              <label className={labelCls}>New Password * (min 6 chars)</label>
+              <input
+                type="password"
+                value={resetPwdValue}
+                onChange={e => setResetPwdValue(e.target.value)}
+                placeholder="••••••"
+                className={inputCls}
+              />
+            </div>
+            {resetPwdErr && <p className="text-sm text-red-600 mt-2">{resetPwdErr}</p>}
+            <div className="flex gap-3 mt-5">
+              <button onClick={() => { setResetPwdTarget(null); setResetPwdValue(""); setResetPwdErr(""); }}
+                className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50">Cancel</button>
+              <button
+                disabled={resetPwdSaving || resetPwdValue.length < 6}
+                onClick={async () => {
+                  setResetPwdSaving(true); setResetPwdErr("");
+                  try {
+                    const res = await fetch(`/api/admin/users/${resetPwdTarget.id}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ password: resetPwdValue }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error ?? "Failed to reset password");
+                    setResetPwdTarget(null); setResetPwdValue("");
+                  } catch (e: unknown) {
+                    setResetPwdErr(e instanceof Error ? e.message : "Failed");
+                  } finally {
+                    setResetPwdSaving(false);
+                  }
+                }}
+                className="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-xl text-sm font-semibold hover:bg-amber-600 disabled:opacity-50">
+                {resetPwdSaving ? "Saving…" : "Reset Password"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Vehicle modal */}
       {vModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -966,6 +1019,8 @@ export default function MasterPage() {
                               setUserModal({ mode: "edit", user });
                               setUserName(user.name); setUserEmail(user.email); setUserRole(user.role); setFormErr("");
                             }} className="text-xs text-blue-600 hover:underline font-medium">Edit</button>
+                            <button onClick={() => { setResetPwdTarget(user); setResetPwdValue(""); setResetPwdErr(""); }}
+                              className="text-xs text-amber-600 hover:underline font-medium">Reset Pwd</button>
                             <button onClick={() => setDeleteTarget({ type: "user", id: user.id, label: `User "${user.name}" (${ROLE_LABELS[user.role] ?? user.role})` })}
                               className="text-xs text-red-500 hover:underline font-medium">Delete</button>
                           </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { hash } from "bcryptjs";
 import { logAudit } from "@/lib/audit";
 import { apiError } from "@/lib/api-error";
 
@@ -10,7 +11,27 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    const { name, role, email } = await req.json();
+    const body = await req.json();
+
+    // Password reset flow
+    if (body.password !== undefined) {
+      if (!body.password || body.password.length < 6)
+        return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
+      const existing = await prisma.user.findUnique({ where: { id: params.id } });
+      if (!existing) return NextResponse.json({ error: "Not found." }, { status: 404 });
+      const passwordHash = await hash(body.password, 10);
+      await prisma.user.update({ where: { id: params.id }, data: { passwordHash, tokenVersion: { increment: 1 } } });
+      await logAudit({
+        userId: session.user.id,
+        action: "UPDATED",
+        entity: "USER",
+        entityId: params.id,
+        description: `${session.user.name} reset password for ${existing.name}`,
+      });
+      return NextResponse.json({ ok: true });
+    }
+
+    const { name, role, email } = body;
     if (!name?.trim() || !role || !email?.trim()) return NextResponse.json({ error: "Name, email and role are required." }, { status: 400 });
 
     const existing = await prisma.user.findUnique({ where: { id: params.id } });
