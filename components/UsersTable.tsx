@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 type User = { id: string; name: string; email: string; role: string };
 
-const ROLES = ["ADMIN", "PLANNING_TEAM", "PLACEMENT_TEAM", "DRIVER_MANAGEMENT", "MAINTENANCE_TEAM", "STORE_AND_TYRE", "KAM"];
+const ROLES = ["ADMIN", "PLANNING_TEAM", "PLACEMENT_TEAM", "DRIVER_MANAGEMENT", "MAINTENANCE_TEAM", "STORE_AND_TYRE", "E_LOCK_TEAM", "KAM", "VEHICLE_HEALTH_TEAM"];
 const ROLE_COLOR: Record<string, string> = {
   ADMIN: "bg-purple-100 text-purple-700",
   PLANNING_TEAM: "bg-blue-100 text-blue-700",
@@ -11,11 +11,14 @@ const ROLE_COLOR: Record<string, string> = {
   DRIVER_MANAGEMENT: "bg-orange-100 text-orange-700",
   MAINTENANCE_TEAM: "bg-pink-100 text-pink-700",
   STORE_AND_TYRE: "bg-yellow-100 text-yellow-700",
+  E_LOCK_TEAM: "bg-cyan-100 text-cyan-700",
   KAM: "bg-red-100 text-red-700",
+  VEHICLE_HEALTH_TEAM: "bg-teal-100 text-teal-700",
 };
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Admin", PLANNING_TEAM: "Planning Team", PLACEMENT_TEAM: "Placement Team",
-  DRIVER_MANAGEMENT: "Driver Mgmt", MAINTENANCE_TEAM: "Maintenance", STORE_AND_TYRE: "Store & Tyre", KAM: "KAM",
+  DRIVER_MANAGEMENT: "Driver Mgmt", MAINTENANCE_TEAM: "Maintenance", STORE_AND_TYRE: "Store & Tyre",
+  E_LOCK_TEAM: "E-Lock Team", KAM: "KAM", VEHICLE_HEALTH_TEAM: "Vehicle Team",
 };
 
 export default function UsersTable({ initialUsers }: { initialUsers?: User[] }) {
