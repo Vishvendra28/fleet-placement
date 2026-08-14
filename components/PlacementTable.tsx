@@ -449,6 +449,34 @@ export default function PlacementTable({
     setAssignError(null);
   }
 
+  async function addAndAssignVehicle(placementId: string, vehicleNumber: string) {
+    setAssignSaving(true);
+    setAssignError(null);
+    try {
+      const createRes = await fetch("/api/vehicles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vehicleNumber: vehicleNumber.trim().toUpperCase() }),
+      });
+      const newVehicle = await createRes.json();
+      if (!createRes.ok) throw new Error(newVehicle.error ?? "Failed to add vehicle");
+      setAssignVehicleList((prev) => [...prev, newVehicle]);
+      const assignRes = await fetch(`/api/placements/${placementId}/remarks`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section: "vehicleAssign", data: { vehicleId: newVehicle.id } }),
+      });
+      const updated = await assignRes.json();
+      if (!assignRes.ok) throw new Error(updated.error ?? "Assignment failed");
+      if (updated?.id) setPlacements((prev) => prev.map((p) => p.id === updated.id ? updated : p));
+      cancelAssignVehicle();
+    } catch (e: unknown) {
+      setAssignError(e instanceof Error ? e.message : "Failed to add and assign vehicle");
+    } finally {
+      setAssignSaving(false);
+    }
+  }
+
   async function doAssignVehicle(placementId: string, vehicleId: string) {
     if (!vehicleId) return;
     setAssignSaving(true);
@@ -1023,13 +1051,29 @@ export default function PlacementTable({
                               <input type="text" placeholder="Search vehicle…" value={assignVehicleSearch} autoFocus
                                 onChange={(e) => setAssignVehicleSearch(e.target.value)}
                                 className="text-xs border border-green-300 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full" />
-                              <select value={pendingAssignVehicleId} onChange={(e) => setPendingAssignVehicleId(e.target.value)}
-                                className="text-xs border border-green-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full">
-                                <option value="" disabled>Pick vehicle…</option>
-                                {assignVehicleList.filter((v) => !assignVehicleSearch || v.vehicleNumber.toLowerCase().includes(assignVehicleSearch.toLowerCase())).map((v) => (
-                                  <option key={v.id} value={v.id}>{v.vehicleNumber}</option>
-                                ))}
-                              </select>
+                              {(() => {
+                                const filtered = assignVehicleList.filter((v) => !assignVehicleSearch || v.vehicleNumber.toLowerCase().includes(assignVehicleSearch.toLowerCase()));
+                                return (
+                                  <>
+                                    <select value={pendingAssignVehicleId} onChange={(e) => setPendingAssignVehicleId(e.target.value)}
+                                      className="text-xs border border-green-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full">
+                                      <option value="" disabled>Pick vehicle…</option>
+                                      {filtered.map((v) => (
+                                        <option key={v.id} value={v.id}>{v.vehicleNumber}</option>
+                                      ))}
+                                    </select>
+                                    {assignVehicleSearch.trim() && filtered.length === 0 && (
+                                      <button
+                                        onClick={() => addAndAssignVehicle(p.id, assignVehicleSearch)}
+                                        disabled={assignSaving}
+                                        className="text-xs px-2 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-semibold hover:bg-blue-100 transition-colors disabled:opacity-40 text-left"
+                                      >
+                                        + Add &quot;{assignVehicleSearch.toUpperCase()}&quot;
+                                      </button>
+                                    )}
+                                  </>
+                                );
+                              })()}
                               {assignError && <p className="text-[10px] text-red-600">{assignError}</p>}
                               <div className="flex gap-1">
                                 <button disabled={!pendingAssignVehicleId || assignSaving}
@@ -1418,16 +1462,32 @@ export default function PlacementTable({
                               onChange={(e) => setAssignVehicleSearch(e.target.value)}
                               className="text-xs border border-green-300 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full"
                             />
-                            <select
-                              value={pendingAssignVehicleId}
-                              onChange={(e) => setPendingAssignVehicleId(e.target.value)}
-                              className="text-xs border border-green-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full"
-                            >
-                              <option value="" disabled>Pick vehicle…</option>
-                              {assignVehicleList.filter((v) => !assignVehicleSearch || v.vehicleNumber.toLowerCase().includes(assignVehicleSearch.toLowerCase())).map((v) => (
-                                <option key={v.id} value={v.id}>{v.vehicleNumber}</option>
-                              ))}
-                            </select>
+                            {(() => {
+                              const filtered = assignVehicleList.filter((v) => !assignVehicleSearch || v.vehicleNumber.toLowerCase().includes(assignVehicleSearch.toLowerCase()));
+                              return (
+                                <>
+                                  <select
+                                    value={pendingAssignVehicleId}
+                                    onChange={(e) => setPendingAssignVehicleId(e.target.value)}
+                                    className="text-xs border border-green-300 rounded-lg px-1.5 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-green-400 w-full"
+                                  >
+                                    <option value="" disabled>Pick vehicle…</option>
+                                    {filtered.map((v) => (
+                                      <option key={v.id} value={v.id}>{v.vehicleNumber}</option>
+                                    ))}
+                                  </select>
+                                  {assignVehicleSearch.trim() && filtered.length === 0 && (
+                                    <button
+                                      onClick={() => addAndAssignVehicle(p.id, assignVehicleSearch)}
+                                      disabled={assignSaving}
+                                      className="text-xs px-2 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg font-semibold hover:bg-blue-100 transition-colors disabled:opacity-40 text-left"
+                                    >
+                                      + Add &quot;{assignVehicleSearch.toUpperCase()}&quot;
+                                    </button>
+                                  )}
+                                </>
+                              );
+                            })()}
                             {assignError && <p className="text-[10px] text-red-600">{assignError}</p>}
                             <div className="flex gap-1">
                               <button
