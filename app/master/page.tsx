@@ -42,6 +42,7 @@ const ROLES = [
   { value: "STORE_AND_TYRE", label: "Store & Tyre" },
   { value: "E_LOCK_TEAM", label: "E-Lock Team" },
   { value: "KAM", label: "KAM" },
+  { value: "VEHICLE_HEALTH_TEAM", label: "Vehicle Team" },
 ];
 const ROLE_LABELS: Record<string, string> = Object.fromEntries(ROLES.map(r => [r.value, r.label]));
 const ROLE_COLOR: Record<string, string> = {
@@ -53,6 +54,7 @@ const ROLE_COLOR: Record<string, string> = {
   STORE_AND_TYRE: "bg-yellow-100 text-yellow-700",
   E_LOCK_TEAM: "bg-cyan-100 text-cyan-700",
   KAM: "bg-violet-100 text-violet-700",
+  VEHICLE_HEALTH_TEAM: "bg-teal-100 text-teal-700",
 };
 
 const inputCls = "w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white";
