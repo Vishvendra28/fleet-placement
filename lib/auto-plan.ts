@@ -26,7 +26,7 @@ export async function planForDate(dateStr: string): Promise<{ created: number }>
     const cutoffTime = new Date(placementTime.getTime() - 3 * 60 * 60 * 1000);
 
     const fwExists = await prisma.placement.findFirst({
-      where: { clientId: mr.clientId, routeId: mr.routeId, laneType: "FW", date: { gte: dateStart, lt: dateEnd } },
+      where: { clientId: mr.clientId, routeId: mr.routeId, laneType: "FW", placementTime, date: { gte: dateStart, lt: dateEnd } },
     });
     if (!fwExists) {
       await prisma.placement.create({
@@ -37,7 +37,7 @@ export async function planForDate(dateStr: string): Promise<{ created: number }>
 
     if (is2WaySchedule(mr.cohort)) {
       const retExists = await prisma.placement.findFirst({
-        where: { clientId: mr.clientId, routeId: mr.routeId, laneType: "RET", date: { gte: dateStart, lt: dateEnd } },
+        where: { clientId: mr.clientId, routeId: mr.routeId, laneType: "RET", placementTime, date: { gte: dateStart, lt: dateEnd } },
       });
       if (!retExists) {
         await prisma.placement.create({
