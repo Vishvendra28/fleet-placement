@@ -990,9 +990,14 @@ export default function PlacementTable({
                               )}
                             </>
                           ) : (
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLOR[p.finalStatus]}`}>
-                              {FINAL_STATUS_LABELS[p.finalStatus]}
-                            </span>
+                            <>
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STATUS_COLOR[p.finalStatus]}`}>
+                                {FINAL_STATUS_LABELS[p.finalStatus]}
+                              </span>
+                              {p.finalStatus === "NOT_PLACED" && p.statusComment && (
+                                <span className="text-[10px] text-slate-500 italic text-right max-w-[140px] truncate leading-tight" title={p.statusComment}>{p.statusComment}</span>
+                              )}
+                            </>
                           )}
                           {p.finalStatus === "PENDING" && <CountdownBadge placementTime={p.placementTime} />}
                           {isAdmin && p.finalStatus !== "PLACED" && (
@@ -1669,6 +1674,9 @@ export default function PlacementTable({
                                       <option key={k} value={k} disabled={k === "PLACED" && hasOpen}>{v}</option>
                                     ))}
                                   </select>
+                                  {p.finalStatus === "NOT_PLACED" && p.statusComment && !statusForms[p.id] && (
+                                    <span className="text-[10px] text-slate-500 italic leading-tight max-w-[120px] truncate" title={p.statusComment}>{p.statusComment}</span>
+                                  )}
                                   {p.eta && (p.finalStatus === "ARRIVING" || p.finalStatus === "WAIT_FOR_UNLOADING") && !statusForms[p.id] && (
                                     <button
                                       onClick={() => {
@@ -1703,9 +1711,14 @@ export default function PlacementTable({
                                   )}
                                 </>
                               ) : (
-                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${STATUS_COLOR[p.finalStatus]}`}>
-                                  {FINAL_STATUS_LABELS[p.finalStatus]}
-                                </span>
+                                <>
+                                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${STATUS_COLOR[p.finalStatus]}`}>
+                                    {FINAL_STATUS_LABELS[p.finalStatus]}
+                                  </span>
+                                  {p.finalStatus === "NOT_PLACED" && p.statusComment && (
+                                    <span className="text-[10px] text-slate-500 italic leading-tight max-w-[120px] truncate" title={p.statusComment}>{p.statusComment}</span>
+                                  )}
+                                </>
                               )}
                               {statusError === p.id && (
                                 <span className="text-[10px] text-red-600 font-medium leading-tight">Resolve open issues first</span>
