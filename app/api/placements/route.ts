@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
         placementTeamRemark: { select: { elockStatus: true, idfyDrivers: true, cargoNet: true, tirpal: true, stepney: true } },
         issueAlerts: { select: { id: true, status: true, issueCategory: true, issueValue: true, source: true, eta: true, resolutionNote: true } },
       },
-      orderBy: [{ date: "asc" }, { placementTime: "asc" }],
+      orderBy: [{ date: "asc" }, { placementTime: "asc" }, { id: "asc" }],
     });
 
     return NextResponse.json(placements);
